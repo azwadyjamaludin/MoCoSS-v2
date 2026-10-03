@@ -15,6 +15,13 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    ```bash
    npx expo start
    ```
+Alternatively, for testing purposes, the project can be run on the simulator and web.
+To run the project, navigate to the directory and run one of the following npm commands.
+
+- cd MoCoSS-v2
+- npm run android
+- npm run ios
+- npm run web
 
 In the output, you'll find options to open the app in a
 
