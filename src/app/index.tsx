@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import MoCoSSSplashScreen from '../components/MoCoSSSplashScreen';
 
 // Set this to your Python backend URL (e.g., http://localhost:8000 or your Codespaces URL)
 const PYTHON_BACKEND_URL = 'http://localhost:8000/api/upload-audio';
 
 export default function HomeScreen() {
+  const [showSplash, setShowSplash] = useState<boolean>(true);
   const [status, setStatus] = useState<string>('Ready to connect to Python backend');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
@@ -30,10 +32,22 @@ export default function HomeScreen() {
     }
   };
 
+  // 1. Render Splash Screen initially
+  if (showSplash) {
+    return (
+      <MoCoSSSplashScreen
+        onFinish={() => {
+          setShowSplash(false);
+        }}
+      />
+    );
+  }
+
+  // 2. Render Main Home Dashboard after Splash is dismissed
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>MoCoSS v2</Text>
+        <Text style={styles.title}>MoCoSS</Text>
         <Text style={styles.subtitle}>Counseling Supervision Interface</Text>
       </View>
 
@@ -58,7 +72,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0B0F19', // Updated to sleek dark-mode background
   },
   header: {
     padding: 24,
