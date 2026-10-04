@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
     Easing,
-    interpolate,
     useAnimatedStyle,
     useSharedValue,
     withRepeat,
@@ -22,33 +21,26 @@ import Svg, {
 
 const { width, height } = Dimensions.get('window');
 
-// 1. Properly create animated SVG components with explicit type casting
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-
 interface MoCoSSSplashScreenProps {
   onFinish?: () => void;
 }
 
 export default function MoCoSSSplashScreen({ onFinish }: MoCoSSSplashScreenProps) {
-  // Shared Values for Animations
   const pulse = useSharedValue(0);
   const waveHeight = useSharedValue(1);
   const scale = useSharedValue(0.85);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    // Entrance Animation
     opacity.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.quad) });
     scale.value = withTiming(1, { duration: 800, easing: Easing.back(1.2) });
 
-    // Ambient Ring Pulse Loop
     pulse.value = withRepeat(
       withTiming(1, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
       -1,
       true
     );
 
-    // Audio Wave Oscillation Loop
     waveHeight.value = withRepeat(
       withSequence(
         withTiming(1.3, { duration: 600, easing: Easing.inOut(Easing.sin) }),
@@ -59,19 +51,9 @@ export default function MoCoSSSplashScreen({ onFinish }: MoCoSSSplashScreenProps
     );
   }, []);
 
-  // Reanimated Styles
   const containerAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     opacity: opacity.value,
-  }));
-
-  const ringAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: interpolate(pulse.value, [0, 1], [0.95, 1.08]) }],
-    opacity: interpolate(pulse.value, [0, 1], [0.3, 0.8]),
-  }));
-
-  const waveAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleY: waveHeight.value }],
   }));
 
   const handlePress = () => {
@@ -108,10 +90,10 @@ export default function MoCoSSSplashScreen({ onFinish }: MoCoSSSplashScreenProps
               </LinearGradient>
             </Defs>
 
-            {/* Dark Background Base */}
+            {/* Background */}
             <Rect width="280" height="280" rx="60" fill="url(#bgGlow)" />
 
-            {/* Neural Network AI Nodes */}
+            {/* Neural Nodes */}
             <G opacity={0.6}>
               <Circle cx="80" cy="80" r="4" fill="#38BDF8" />
               <Circle cx="200" cy="80" r="4" fill="#A855F7" />
@@ -130,30 +112,17 @@ export default function MoCoSSSplashScreen({ onFinish }: MoCoSSSplashScreenProps
               <Rect x="193" y="110" width="8" height="40" rx="4" fill="url(#waveGrad)" />
             </G>
 
-            {/* Modern Typography */}
+            {/* Centered MoCoSS Title */}
             <SvgText
               x="140"
-              y="225"
-              fontSize="24"
+              y="220"
+              fontSize="26"
               fontWeight="bold"
               fill="#F8FAFC"
               textAnchor="middle"
-              letterSpacing="2"
+              letterSpacing="3"
             >
               MoCoSS
-            </SvgText>
-
-            {/* Neon v2 Badge */}
-            <Rect x="188" y="206" width="30" height="18" rx="5" fill="#38BDF8" />
-            <SvgText
-              x="203"
-              y="219"
-              fontSize="11"
-              fontWeight="bold"
-              fill="#0B0F19"
-              textAnchor="middle"
-            >
-              v2
             </SvgText>
           </Svg>
         </View>
