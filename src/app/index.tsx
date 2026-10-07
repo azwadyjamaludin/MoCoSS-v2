@@ -1,49 +1,59 @@
-import { useState } from 'react';
-import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Href, useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { useEffect, useState } from 'react';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MoCoSSSplashScreen from '../components/MoCoSSSplashScreen';
 
-// Set this to your Python backend URL (e.g., http://localhost:8000 or your Codespaces URL)
-const PYTHON_BACKEND_URL = 'http://localhost:8000/api/upload-audio';
-
 export default function HomeScreen() {
+  const router = useRouter();
   const [showSplash, setShowSplash] = useState<boolean>(true);
-  const [status, setStatus] = useState<string>('Ready to connect to Python backend');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<{ fullName: string; role: string } | null>(null);
 
-  /**
-   * Example function to test connection with Python FastAPI/Flask backend
-   */
-  const testBackendConnection = async () => {
-    setIsProcessing(true);
-    setStatus('Connecting to Python server...');
+  // Check authentication status on launch
+  useEffect(() => {
+    checkAuthToken();
+  }, []);
 
+  const checkAuthToken = async () => {
     try {
-      const response = await fetch('http://localhost:8000/');
-      const data = await response.json();
-      
-      setStatus(`Connected! Server Status: ${data.status}`);
-      Alert.alert('Backend Success', JSON.stringify(data));
+      const token = await SecureStore.getItemAsync('userToken');
+      const storedUserData = await SecureStore.getItemAsync('userData');
+
+      if (token && storedUserData) {
+        setIsAuthenticated(true);
+        setUser(JSON.parse(storedUserData));
+      } else {
+        setIsAuthenticated(false);
+      }
     } catch (error) {
-      console.error('Connection failed:', error);
-      setStatus('Failed to connect to Python backend.');
-      Alert.alert('Error', 'Could not reach Python server on port 8000.');
-    } finally {
-      setIsProcessing(false);
+      console.error('Error checking authentication state:', error);
+      setIsAuthenticated(false);
     }
+  };
+
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+    // If not logged in, redirect to login page after splash screen
+    if (!isAuthenticated) {
+      router.replace('/login' as Href);
+    }
+  };
+
+  const handleLogout = async () => {
+    await SecureStore.deleteItemAsync('userToken');
+    await SecureStore.deleteItemAsync('userData');
+    setIsAuthenticated(false);
+    setUser(null);
+    router.replace('/login' as Href);
   };
 
   // 1. Render Splash Screen initially
   if (showSplash) {
-    return (
-      <MoCoSSSplashScreen
-        onFinish={() => {
-          setShowSplash(false);
-        }}
-      />
-    );
+    return <MoCoSSSplashScreen onFinish={handleSplashFinish} />;
   }
 
-  // 2. Render Main Home Dashboard after Splash is dismissed
+  // 2. Render Main Home Dashboard if Authenticated
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -52,17 +62,13 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.statusLabel}>Backend Connection Status:</Text>
-        <Text style={styles.statusText}>{status}</Text>
+        <Text style={styles.welcomeText}>
+          Welcome, {user?.fullName || 'Supervisor'}!
+        </Text>
+        <Text style={styles.roleText}>Role: {user?.role || 'supervisor'}</Text>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={testBackendConnection}
-          disabled={isProcessing}
-        >
-          <Text style={styles.buttonText}>
-            {isProcessing ? 'Testing...' : 'Test Python Backend'}
-          </Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -72,7 +78,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0F19', // Updated to sleek dark-mode background
+    backgroundColor: '#0B0F19',
   },
   header: {
     padding: 24,
@@ -96,26 +102,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
   },
-  statusLabel: {
-    fontSize: 14,
-    color: '#64748B',
+  welcomeText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#F8FAFC',
     marginBottom: 8,
   },
-  statusText: {
-    fontSize: 16,
-    color: '#F8FAFC',
-    textAlign: 'center',
+  roleText: {
+    fontSize: 14,
+    color: '#64748B',
     marginBottom: 32,
+    textTransform: 'capitalize',
   },
-  button: {
-    backgroundColor: '#0284C7',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 24,
+  logoutButton: {
+    backgroundColor: '#EF4444',
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 12,
   },
-  buttonText: {
+  logoutButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
   },
 });
