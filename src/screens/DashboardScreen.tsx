@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
 import {
-    Alert,
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Language, useLanguage } from '../context/LanguageContext';
@@ -41,7 +41,7 @@ export default function DashboardScreen({ user, onLogout }: DashboardScreenProps
     );
   };
 
-  // ContentActivity.kt module array mapping
+  // Module array mapping
   const modules: ModuleItem[] = [
     {
       id: 'ind_coun',
@@ -138,7 +138,7 @@ export default function DashboardScreen({ user, onLogout }: DashboardScreenProps
       {/* Top Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.title}>MoCoSS-v2</Text>
+          <Text style={styles.title}>MoCoSS</Text>
           <Text style={styles.subtitle}>
             {lang === 'BM' ? 'Sistem Penyeliaan Kaunseling' : 'Counselling Supervision System'}
           </Text>

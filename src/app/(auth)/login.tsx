@@ -1,20 +1,20 @@
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 // Adjust this URL to point to MoCoSS backend (e.g., http://localhost:8000 or your server IP)
-const AUTH_API_URL = 'http://localhost:8000/api/auth/login';
+const AUTH_API_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/auth/login`;
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function LoginScreen() {
         await SecureStore.setItemAsync('userData', JSON.stringify(data.user));
 
         Alert.alert('Welcome', `Logged in as ${data.user.fullName}`);
-        // Navigate to home dashboard
+        // Navigate to the app home/dashboard route
         router.replace('/');
       } else {
         Alert.alert('Authentication Failed', data.error || 'Invalid credentials.');
@@ -123,6 +123,12 @@ export default function LoginScreen() {
         <TouchableOpacity style={styles.myDigitalIdButton} onPress={handleMyDigitalIDLogin}>
           <Text style={styles.myDigitalIdText}>Sign in with MyDigital ID</Text>
         </TouchableOpacity>
+
+        <View style={styles.dividerContainer}>
+          <View style={styles.dividerLine} />
+          <Link href="/register">Register</Link>
+        </View>
+
       </View>
     </KeyboardAvoidingView>
   );

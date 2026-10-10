@@ -31,24 +31,30 @@ export default function HomeScreen() {
     }
   };
 
-  const handleSplashFinish = () => {
-    setShowSplash(false);
-    if (!isAuthenticated) {
-      router.replace('/login' as Href);
-    }
-  };
-
   const handleLogout = async () => {
     await SecureStore.deleteItemAsync('userToken');
     await SecureStore.deleteItemAsync('userData');
-    setIsAuthenticated(false);
-    setUser(null);
-    router.replace('/login' as Href);
+    //setIsAuthenticated(false);
+    //setUser(null);
+    router.replace('/(auth)/login' as Href);
+  };
+
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+    if (!isAuthenticated) {
+      router.replace('/(auth)/login' as Href);
+    }
   };
 
   if (showSplash) {
     return <MoCoSSSplashScreen onFinish={handleSplashFinish} />;
   }
 
-  return <DashboardScreen user={user} onLogout={handleLogout} />;
+  if (isAuthenticated && user) {
+    return <DashboardScreen user={user} onLogout={handleLogout} />;
+  }
+
+  // If not authenticated, redirect to login
+  router.replace('/(auth)/login' as Href);
+  return null;
 }
