@@ -14,6 +14,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (userData: User, token: string) => Promise<void>;
   logout: () => Promise<void>;
+  checkAuthToken: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,6 +41,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const checkAuthToken = async () => {
+    try {
+      await SecureStore.getItemAsync('userToken');
+    } catch (error) {
+      console.error('Error checking authentication state:', error);
+      router.replace('/(auth)/login' as Href);
+    }
+  };  
+
   const login = async (userData: User, token: string) => {
     await SecureStore.setItemAsync('userToken', token);
     await SecureStore.setItemAsync('userData', JSON.stringify(userData));
@@ -56,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, checkAuthToken }}>
       {children}
     </AuthContext.Provider>
   );

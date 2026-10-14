@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useLanguage } from '../../context/LanguageContext';
@@ -11,7 +10,7 @@ import { translations } from '../../context/localization';
 
 export default function IndividualCounselingScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, checkAuthToken } = useAuth();
   //const params = useLocalSearchParams<{ superviseeId?: string }>();
   const { lang } = useLanguage();
 
@@ -140,7 +139,7 @@ export default function IndividualCounselingScreen() {
     }
   };
   const handleSaveRecord = async () => {
-    if (isSessionActive) {
+    if (isSessionActive || isAudioRecording) {
       Alert.alert(translations[lang].activeSession, translations[lang].saveRecordDesc);
       return;
     }
@@ -154,41 +153,41 @@ export default function IndividualCounselingScreen() {
 
     try {
       // 1. Retrieve the secure auth token
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = checkAuthToken(); //await SecureStore.getItemAsync('userToken');
       if (!token) {
         Alert.alert(translations[lang].sessionExpired, translations[lang].loginAgain);
         router.replace('/(auth)/login');
         return;
       }
 
-      // 2. Build the FormData payload
+      // Build the FormData payload
       const formData = new FormData();
       formData.append('durationHours', calculatedHours);
       formData.append('clientStatus', clientStatus);
       formData.append('sessionNotes', sessionNotes);
 
-      // Attach video file if it exists in cache
+      // Attach video file if recorded
       if (recordedVideoUri) {
         // Extract filename from URI
-        const filename = recordedVideoUri.split('/').pop() || 'indCoun-session.mp4';
+        const videoFilename = recordedVideoUri.split('/').pop() || 'indCoun-session.mp4';
         
         // Append file object structure required by React Native FormData
         formData.append('video', {
           uri: recordedVideoUri,
-          name: filename,
+          name: videoFilename,
           type: 'video/mp4',
         } as any);
       }
 
-       // Attach audio file if it exists in cache
+       // Attach audio file if recorded
       if (recordedAudioUri) {
         // Extract filename from URI
-        const filename = recordedAudioUri.split('/').pop() || 'indCoun-session.mp3';
+        const audioFilename = recordedAudioUri.split('/').pop() || 'indCoun-session.mp3';
         
         // Append file object structure required by React Native FormData
         formData.append('audio', {
           uri: recordedAudioUri,
-          name: filename,
+          name: audioFilename,
           type: 'audio/mp3',
         } as any);
       }
@@ -212,7 +211,7 @@ export default function IndividualCounselingScreen() {
       ]);
     } catch (error) {
       console.error('Submission error:', error);
-      Alert.alert('Error', 'Failed to upload counseling record and video. Please try again.');
+      Alert.alert('Error', 'Failed to upload counseling record files. Please try again.');
     }
   };
 
@@ -225,7 +224,7 @@ export default function IndividualCounselingScreen() {
     );
   }
 
-  return (
+ return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header */}
       <View style={styles.header}>
@@ -235,8 +234,9 @@ export default function IndividualCounselingScreen() {
         <Text style={styles.headerTitle}>{translations[lang].indCounSessionTitle}</Text>
       </View>
 
-      {/* Live Camera & Timer Card */}
-      <View style={styles.cameraCard}>
+      {/* Live Camera View Card (Video + Audio) */}
+      <View style={styles.card}>
+        <Text style={styles.sectionHeader}>Video Session Mode</Text>
         <CameraView style={styles.cameraPreview} ref={cameraRef} facing="front">
           <View style={styles.overlayContainer}>
             <Text style={styles.timerDisplay}>{formatTime(secondsElapsed)}</Text>
@@ -244,16 +244,29 @@ export default function IndividualCounselingScreen() {
         </CameraView>
 
         <TouchableOpacity 
-          style={[styles.timerButton, isSessionActive ? styles.stopButton : styles.startButton]} 
+          style={[styles.actionButton, isSessionActive ? styles.stopButton : styles.startButton]} 
           onPress={handleToggleSession}
         >
           <Ionicons name={isSessionActive ? "stop-circle" : "videocam"} size={20} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.timerButtonText}>
-            {isSessionActive ? "End Video Session" : "Start Video Session"}
-          </Text>
+          <Text style={styles.buttonText}>{isSessionActive ? "End Video Session" : "Start Video Session"}</Text>
         </TouchableOpacity>
         
-        {recordedVideoUri && <Text style={styles.successUriText}>✓ Video recorded to cache storage</Text>}
+        {recordedVideoUri && <Text style={styles.successUriText}>✓ Video cached securely</Text>}
+      </View>
+
+      {/* Standalone Audio Recording Card (Audio-Only Option) */}
+      <View style={styles.card}>
+        <Text style={styles.sectionHeader}>Audio-Only Recording Mode</Text>
+        <TouchableOpacity 
+          style={[styles.actionButton, isAudioRecording ? styles.stopButton : styles.audioStartButton]} 
+          onPress={handleToggleAudioRecording}
+          disabled={isSessionActive}
+        >
+          <Ionicons name={isAudioRecording ? "stop-circle" : "mic"} size={20} color="#fff" style={{ marginRight: 8 }} />
+          <Text style={styles.buttonText}>{isAudioRecording ? "Stop Audio Recording" : "Start Audio-Only Recording"}</Text>
+        </TouchableOpacity>
+        
+        {recordedAudioUri && <Text style={styles.successUriText}>✓ Audio recorded and cached</Text>}
       </View>
 
       {/* Form Fields */}
@@ -265,7 +278,7 @@ export default function IndividualCounselingScreen() {
           placeholderTextColor="#999"
           value={clientStatus}
           onChangeText={setClientStatus}
-          editable={!isSessionActive}
+          editable={!isSessionActive && !isAudioRecording}
         />
       </View>
 
@@ -284,9 +297,9 @@ export default function IndividualCounselingScreen() {
 
       {/* Submit Record Button */}
       <TouchableOpacity 
-        style={[styles.submitButton, isSessionActive && styles.disabledButton]} 
+        style={[styles.submitButton, (isSessionActive || isAudioRecording) && styles.disabledButton]} 
         onPress={handleSaveRecord}
-        disabled={isSessionActive}
+        disabled={isSessionActive || isAudioRecording}
       >
         <Text style={styles.submitButtonText}>Save Counseling Record</Text>
       </TouchableOpacity>
@@ -301,14 +314,16 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, marginTop: 10 },
   backButton: { marginRight: 15 },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
-  cameraCard: { backgroundColor: '#fff', borderRadius: 12, padding: 12, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#e0e0e0', elevation: 2 },
-  cameraPreview: { width: '100%', height: 240, borderRadius: 8, overflow: 'hidden', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 15 },
-  overlayContainer: { backgroundColor: 'rgba(0,0,0,0.6)', width: '100%', paddingVertical: 8, alignItems: 'center' },
-  timerDisplay: { fontSize: 28, fontWeight: 'bold', color: '#fff', fontVariant: ['tabular-nums'] },
-  timerButton: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8, width: '100%', justifyContent: 'center' },
+  card: { backgroundColor: '#fff', borderRadius: 12, padding: 12, marginBottom: 20, borderWidth: 1, borderColor: '#e0e0e0', elevation: 2 },
+  sectionHeader: { fontSize: 14, fontWeight: 'bold', color: '#444', marginBottom: 8 },
+  cameraPreview: { width: '100%', height: 220, borderRadius: 8, overflow: 'hidden', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 15 },
+  overlayContainer: { backgroundColor: 'rgba(0,0,0,0.6)', width: '100%', paddingVertical: 6, alignItems: 'center' },
+  timerDisplay: { fontSize: 24, fontWeight: 'bold', color: '#fff', fontVariant: ['tabular-nums'] },
+  actionButton: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8, width: '100%', justifyContent: 'center' },
   startButton: { backgroundColor: '#28a745' },
+  audioStartButton: { backgroundColor: '#0284c7' },
   stopButton: { backgroundColor: '#dc3545' },
-  timerButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   successUriText: { marginTop: 8, fontSize: 12, color: '#28a745', fontWeight: '500' },
   formGroup: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#444', marginBottom: 6 },
