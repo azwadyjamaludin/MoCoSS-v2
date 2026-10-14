@@ -2,7 +2,6 @@ import { Href, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
 import MoCoSSSplashScreen from '../components/MoCoSSSplashScreen';
-import DashboardScreen from '../screens/DashboardScreen';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -22,6 +21,7 @@ export default function HomeScreen() {
       if (token && storedUserData) {
         setIsAuthenticated(true);
         setUser(JSON.parse(storedUserData));
+        router.replace('/(modules)/dashboard' as Href);
       } else {
         setIsAuthenticated(false);
       }
@@ -34,8 +34,8 @@ export default function HomeScreen() {
   const handleLogout = async () => {
     await SecureStore.deleteItemAsync('userToken');
     await SecureStore.deleteItemAsync('userData');
-    //setIsAuthenticated(false);
-    //setUser(null);
+    setIsAuthenticated(false);
+    setUser(null);
     router.replace('/(auth)/login' as Href);
   };
 
@@ -48,10 +48,6 @@ export default function HomeScreen() {
 
   if (showSplash) {
     return <MoCoSSSplashScreen onFinish={handleSplashFinish} />;
-  }
-
-  if (isAuthenticated && user) {
-    return <DashboardScreen user={user} onLogout={handleLogout} />;
   }
 
   // If not authenticated, redirect to login

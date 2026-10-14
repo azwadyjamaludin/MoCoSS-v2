@@ -10,33 +10,31 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Language, useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { translations } from '../../context/localization';
 
 interface ModuleItem {
   id: string;
-  title: Record<Language, string>;
-  description: Record<Language, string>;
+  title: { [key: string]: any };
+  description: { [key: string]: any };
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
   route: string;
 }
 
-interface DashboardScreenProps {
-  user: { fullName: string; role: string } | null;
-  onLogout: () => void;
-}
-
-export default function DashboardScreen({ user, onLogout }: DashboardScreenProps) {
+export default function DashboardScreen() {
   const router = useRouter();
   const { lang, toggleLanguage } = useLanguage();
+  const {user,logout} = useAuth();
 
   const handleLogoutClick = () => {
     Alert.alert(
-      lang === 'BM' ? 'Log keluar?' : 'Log out?',
-      lang === 'BM' ? 'Adakah anda pasti untuk log keluar?' : 'Are you sure you want to log out?',
+      translations[lang].logoutTitle,
+      translations[lang].logoutConfirm,
       [
         { text: lang === 'BM' ? 'Batal' : 'Cancel', style: 'cancel' },
-        { text: lang === 'BM' ? 'Ya' : 'Yes', style: 'destructive', onPress: onLogout },
+        { text: lang === 'BM' ? 'Ya' : 'Yes', style: 'destructive', onPress: logout },
       ]
     );
   };
@@ -45,88 +43,132 @@ export default function DashboardScreen({ user, onLogout }: DashboardScreenProps
   const modules: ModuleItem[] = [
     {
       id: 'ind_coun',
-      title: { BM: 'Kaunseling Individu', EN: 'Individual Counseling' },
-      description: { BM: 'Pengurusan sesi kaunseling individu', EN: 'Individual counseling session management' },
+      title: { 
+        [lang]: translations[lang].indCounTitle   
+      },
+      description: { 
+        [lang]: translations[lang].indCounDesc 
+      },
       icon: 'person-outline',
       color: '#2563EB',
       route: '/ind-coun',
     },
     {
       id: 'grp_coun',
-      title: { BM: 'Kaunseling Kelompok', EN: 'Group Counseling' },
-      description: { BM: 'Pengurusan sesi kelompok & peserta', EN: 'Group session & participant management' },
+      title: { 
+        [lang]: translations[lang].grpCounTitle   
+      },
+      description: { 
+        [lang]: translations[lang].grpCounDesc 
+      },
       icon: 'people-outline',
       color: '#0D9488',
       route: '/grp-coun',
     },
     {
       id: 'log_book',
-      title: { BM: 'Buku Log', EN: 'Log Book' },
-      description: { BM: 'Rekod dan log penyeliaan harian', EN: 'Daily supervision logbook' },
+      title: { 
+        [lang]: translations[lang].logBookTitle 
+      },
+      description: { 
+        [lang]: translations[lang].logBookDesc 
+      },
       icon: 'journal-outline',
       color: '#D97706',
       route: '/log-book',
     },
     {
       id: 'case_anal',
-      title: { BM: 'Analisis Kes', EN: 'Case Analysis' },
-      description: { BM: 'Penilaian dan laporan analisis kes', EN: 'Case analysis evaluation & reports' },
+      title: { 
+        [lang]: translations[lang].caseAnalTitle 
+      },
+      description: { 
+        [lang]: translations[lang].caseAnalDesc 
+      },
       icon: 'analytics-outline',
       color: '#7C3AED',
       route: '/case-anal',
     },
     {
       id: 'ref_cons',
-      title: { BM: 'Konsultasi & Rujukan', EN: 'Reflective Consultation' },
-      description: { BM: 'Konsultasi reflektif & kes rujukan', EN: 'Reflective consultation & referrals' },
+      title: { 
+        [lang]: translations[lang].refConsTitle 
+      },
+      description: { 
+        [lang]: translations[lang].refConsDesc 
+      },
       icon: 'git-network-outline',
       color: '#DC2626',
       route: '/ref-cons',
     },
     {
       id: 'reflect',
-      title: { BM: 'Refleksi Kendiri', EN: 'Self Reflection' },
-      description: { BM: 'Catatan refleksi penyeliaan', EN: 'Supervision reflection notes' },
+      title: { 
+        [lang]: translations[lang].reflectTitle 
+      },
+      description: { 
+        [lang]: translations[lang].reflectDesc 
+      },
       icon: 'chatbubble-ellipses-outline',
       color: '#E11D48',
       route: '/reflect',
     },
     {
       id: 'psy_edu',
-      title: { BM: 'Psikoedukasi', EN: 'Psychology Education' },
-      description: { BM: 'Bahan modul & program psikoedukasi', EN: 'Psychoeducation modules & materials' },
+      title: { 
+        [lang]: translations[lang].psyEduTitle 
+      },
+      description: { 
+        [lang]: translations[lang].psyEduDesc 
+      },
       icon: 'book-outline',
       color: '#059669',
       route: '/psy-edu',
     },
     {
       id: 'psy_test',
-      title: { BM: 'Ujian Psikologi', EN: 'Psychology Test' },
-      description: { BM: 'Inventori & alat pentaksiran', EN: 'Psychological assessment tools' },
+      title: { 
+        [lang]: translations[lang].psyTestTitle 
+      },
+      description: { 
+        [lang]: translations[lang].psyTestDesc 
+      },
       icon: 'clipboard-outline',
       color: '#4F46E5',
       route: '/psy-test',
     },
     {
       id: 'prof_dev',
-      title: { BM: 'Pembangunan Profesional', EN: 'Professional Dev' },
-      description: { BM: 'Latihan & kompetensi profesional', EN: 'Training & professional competence' },
+      title: { 
+        [lang]: translations[lang].profDevTitle 
+      },
+      description: { 
+        [lang]: translations[lang].profDevDesc 
+      },
       icon: 'ribbon-outline',
       color: '#0891B2',
       route: '/prof-dev',
     },
     {
       id: 'full_mark',
-      title: { BM: 'Markah Penuh', EN: 'Full Mark Evaluation' },
-      description: { BM: 'Rubrik gred & penilaian akhir', EN: 'Grading rubrics & final marks' },
+      title: { 
+        [lang]: translations[lang].fullMarkTitle 
+      },
+      description: { 
+        [lang]: translations[lang].fullMarkDesc 
+      },
       icon: 'star-outline',
       color: '#CA8A04',
       route: '/full-mark',
     },
     {
       id: 'adm_mgt',
-      title: { BM: 'Pengurusan Admin', EN: 'Admin Management' },
-      description: { BM: 'Tetapan sistem & pentadbiran', EN: 'Admin control & system settings' },
+      title: { 
+        [lang]: translations[lang].admMgtTitle 
+      },
+      description: { 
+        [lang]: translations[lang].admMgtDesc 
+      },
       icon: 'settings-outline',
       color: '#475569',
       route: '/adm-mgt',

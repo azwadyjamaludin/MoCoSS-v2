@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { AuthProvider } from '@/context/AuthContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 import { DarkTheme, DefaultTheme, Href, Slot, ThemeProvider, useRouter, useSegments } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import * as SplashScreen from 'expo-splash-screen';
-
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import { LanguageProvider } from '@/context/LanguageContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -47,11 +47,13 @@ export default function RootLayout() {
   }, [isAuthenticated, segments, isLoading]);
 
   return (
+    <AuthProvider>
     <LanguageProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AnimatedSplashOverlay />
         <Slot />
       </ThemeProvider>
     </LanguageProvider>
+    </AuthProvider>
   );
 }
