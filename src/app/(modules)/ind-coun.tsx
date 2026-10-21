@@ -1,6 +1,6 @@
 import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
+import { AudioModule, RecordingPresets, useAudioRecorder } from 'expo-audio';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -11,20 +11,19 @@ import { translations } from '../../context/localization';
 export default function IndividualCounselingScreen() {
   const router = useRouter();
   const { user, checkAuthToken } = useAuth();
-  //const params = useLocalSearchParams<{ superviseeId?: string }>();
   const { lang } = useLanguage();
 
   const cameraRef = useRef<CameraView | null>(null);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
-  const [microphonePermission, requestMicrophonePermission] = useMicrophonePermissions();
+  const [microphonePermission, requestMicrophonePermissions] = useMicrophonePermissions();
   
   // Session timer states
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [recordedVideoUri, setRecordedVideoUri] = useState<string | null>(null);
   
-  // Audio recording states
-  const recordingRef = useRef<Audio.Recording | null>(null);
+  // Audio recording states using modern expo-audio hook
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [isAudioRecording, setIsAudioRecording] = useState(false);
   const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
 
@@ -35,26 +34,30 @@ export default function IndividualCounselingScreen() {
   // Request permissions on load if missing
   useEffect(() => {
     if (!cameraPermission?.granted) requestCameraPermission();
-    if (!microphonePermission?.granted) requestMicrophonePermission();
+    if (!microphonePermission?.granted) requestMicrophonePermissions();
 
-    // Request audio permission for expo-av
-    Audio.requestPermissionsAsync();
+    // Request audio permissions natively via expo-audio
+    (async () => {
+      try {
+        await AudioModule.requestRecordingPermissionsAsync();
+      } catch (e) {
+        console.error('Failed to request audio permissions:', e);
+      }
+    })();
   }, [cameraPermission, microphonePermission]);
   
   // Handle live timer loop
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
-    if (isSessionActive) {
+    if (isSessionActive || isAudioRecording) {
       interval = setInterval(() => {
         setSecondsElapsed((prev) => prev + 1);
       }, 1000);
-    } else if (!isSessionActive && secondsElapsed !== 0) {
-      if (interval) clearInterval(interval);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isSessionActive]);
+  }, [isSessionActive, isAudioRecording]);
 
   // Format seconds into HH:MM:SS
   const formatTime = (totalSeconds: number) => {
@@ -66,7 +69,6 @@ export default function IndividualCounselingScreen() {
 
   const handleToggleSession = async () => {
     if (!isSessionActive) {
-      // Start session & recording check
       if (!cameraRef.current) {
         Alert.alert('Error', 'Camera reference is not ready.');
         return;
@@ -76,9 +78,7 @@ export default function IndividualCounselingScreen() {
         setIsSessionActive(true);
         setSecondsElapsed(0);
         
-        // Starts recording and stores output to a cache URI once stopped
-        const videoRecordPromise = cameraRef.current.recordAsync();
-        const data = await videoRecordPromise;
+        const data = await cameraRef.current.recordAsync();
         if (data?.uri) {
           setRecordedVideoUri(data.uri);
         }
@@ -88,7 +88,6 @@ export default function IndividualCounselingScreen() {
         Alert.alert('Error', 'Could not record video session.');
       }
     } else {
-      // End session confirmation
       Alert.alert(translations[lang].endSession, translations[lang].endSessionConfirmation, [
         { text: translations[lang].cancel || 'Cancel', style: 'cancel' },
         { 
@@ -107,18 +106,16 @@ export default function IndividualCounselingScreen() {
   const handleToggleAudioRecording = async () => {
     if (!isAudioRecording) {
       try {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
-        });
+        const permission = await AudioModule.requestRecordingPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert('Permission denied', 'Microphone permission is required for audio recording.');
+          return;
+        }
 
         setIsAudioRecording(true);
         setSecondsElapsed(0);
-
-        const { recording } = await Audio.Recording.createAsync(
-          Audio.RecordingOptionsPresets.HIGH_QUALITY
-        );
-        recordingRef.current = recording;
+        
+        audioRecorder.record();
       } catch (error) {
         console.error('Failed to start audio recording:', error);
         setIsAudioRecording(false);
@@ -127,17 +124,16 @@ export default function IndividualCounselingScreen() {
     } else {
       try {
         setIsAudioRecording(false);
-        if (recordingRef.current) {
-          await recordingRef.current.stopAndUnloadAsync();
-          const uri = recordingRef.current.getURI();
-          if (uri) setRecordedAudioUri(uri);
-          recordingRef.current = null;
+        await audioRecorder.stop();
+        if (audioRecorder.uri) {
+          setRecordedAudioUri(audioRecorder.uri);
         }
       } catch (error) {
         console.error('Failed to stop audio recording:', error);
       }
     }
   };
+
   const handleSaveRecord = async () => {
     if (isSessionActive || isAudioRecording) {
       Alert.alert(translations[lang].activeSession, translations[lang].saveRecordDesc);
@@ -152,26 +148,20 @@ export default function IndividualCounselingScreen() {
     const calculatedHours = (secondsElapsed / 3600).toFixed(2);
 
     try {
-      // 1. Retrieve the secure auth token
-      const token = checkAuthToken(); //await SecureStore.getItemAsync('userToken');
+      const token = checkAuthToken();
       if (!token) {
         Alert.alert(translations[lang].sessionExpired, translations[lang].loginAgain);
         router.replace('/(auth)/login');
         return;
       }
 
-      // Build the FormData payload
       const formData = new FormData();
       formData.append('durationHours', calculatedHours);
       formData.append('clientStatus', clientStatus);
       formData.append('sessionNotes', sessionNotes);
 
-      // Attach video file if recorded
       if (recordedVideoUri) {
-        // Extract filename from URI
         const videoFilename = recordedVideoUri.split('/').pop() || 'indCoun-session.mp4';
-        
-        // Append file object structure required by React Native FormData
         formData.append('video', {
           uri: recordedVideoUri,
           name: videoFilename,
@@ -179,25 +169,19 @@ export default function IndividualCounselingScreen() {
         } as any);
       }
 
-       // Attach audio file if recorded
       if (recordedAudioUri) {
-        // Extract filename from URI
-        const audioFilename = recordedAudioUri.split('/').pop() || 'indCoun-session.mp3';
-        
-        // Append file object structure required by React Native FormData
+        const audioFilename = recordedAudioUri.split('/').pop() || 'indCoun-session.m4a';
         formData.append('audio', {
           uri: recordedAudioUri,
           name: audioFilename,
-          type: 'audio/mp3',
+          type: 'audio/m4a',
         } as any);
       }
-          
 
-      // 4. Send request to backend
       const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/indCoun/sessions`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,//React Native will automatically generate the correct multipart boundary.
+          'Authorization': `Bearer ${token}`,
         },
         body: formData,
       });
@@ -219,14 +203,13 @@ export default function IndividualCounselingScreen() {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.permissionText}>{translations[lang].permisionRequired}</Text>
-        <Button title="Grant Permissions" onPress={() => { requestCameraPermission(); requestMicrophonePermission(); }} />
+        <Button title="Grant Permissions" onPress={() => { requestCameraPermission(); requestMicrophonePermissions(); }} />
       </View>
     );
   }
 
- return (
+  return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#333" />
@@ -234,7 +217,6 @@ export default function IndividualCounselingScreen() {
         <Text style={styles.headerTitle}>{translations[lang].indCounSessionTitle}</Text>
       </View>
 
-      {/* Live Camera View Card (Video + Audio) */}
       <View style={styles.card}>
         <Text style={styles.sectionHeader}>Video Session Mode</Text>
         <CameraView style={styles.cameraPreview} ref={cameraRef} facing="front">
@@ -254,7 +236,6 @@ export default function IndividualCounselingScreen() {
         {recordedVideoUri && <Text style={styles.successUriText}>✓ Video cached securely</Text>}
       </View>
 
-      {/* Standalone Audio Recording Card (Audio-Only Option) */}
       <View style={styles.card}>
         <Text style={styles.sectionHeader}>Audio-Only Recording Mode</Text>
         <TouchableOpacity 
@@ -269,7 +250,6 @@ export default function IndividualCounselingScreen() {
         {recordedAudioUri && <Text style={styles.successUriText}>✓ Audio recorded and cached</Text>}
       </View>
 
-      {/* Form Fields */}
       <View style={styles.formGroup}>
         <Text style={styles.label}>Client Status / Mood Observation</Text>
         <TextInput
@@ -295,7 +275,6 @@ export default function IndividualCounselingScreen() {
         />
       </View>
 
-      {/* Submit Record Button */}
       <TouchableOpacity 
         style={[styles.submitButton, (isSessionActive || isAudioRecording) && styles.disabledButton]} 
         onPress={handleSaveRecord}

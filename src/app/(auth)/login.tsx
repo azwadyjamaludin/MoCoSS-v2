@@ -38,7 +38,7 @@ export default function LoginScreen() {
       });
 
       const data = await response.json();
-
+      
       if (response.ok) {
         // Save the JWT token securely to local storage
         await SecureStore.setItemAsync('userToken', data.token);
@@ -126,7 +126,9 @@ export default function LoginScreen() {
 
         <View style={styles.dividerContainer}>
           <View style={styles.dividerLine} />
-          <Link href="/register">Register</Link>
+          <Link style={styles.registerText} href="/register">
+            Don't have an account? Register here
+          </Link>
         </View>
 
       </View>
@@ -210,6 +212,11 @@ const styles = StyleSheet.create({
     color: '#64748B',
     paddingHorizontal: 12,
     fontSize: 12,
+    fontWeight: 'bold',
+  },
+  registerText: {
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: 'bold',
   },
   myDigitalIdButton: {

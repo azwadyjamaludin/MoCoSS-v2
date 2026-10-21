@@ -50,7 +50,5 @@ export default function HomeScreen() {
     return <MoCoSSSplashScreen onFinish={handleSplashFinish} />;
   }
 
-  // If not authenticated, redirect to login
-  router.replace('/(auth)/login' as Href);
   return null;
 }

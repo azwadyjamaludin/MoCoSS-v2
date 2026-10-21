@@ -221,7 +221,7 @@ export default function RegisterScreen() {
             <Text style={styles.footerText}>
               {lang === 'BM' ? 'Sudah mempunyai akaun?' : 'Already have an account?'}
             </Text>
-            <TouchableOpacity onPress={() => router.replace('/login' as Href)}>
+            <TouchableOpacity onPress={() => router.push('/login' as Href)}>
               <Text style={styles.loginLink}>{lang === 'BM' ? ' Log Masuk' : ' Sign In'}</Text>
             </TouchableOpacity>
           </View>
