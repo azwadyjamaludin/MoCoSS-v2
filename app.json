@@ -22,7 +22,7 @@
       "package": "com.anonymous.MoCoSS"
     },
     "ios": {
-      "icon": "./assets/images/mocoss.png",
+      "icon": "./assets/images/mocoss-ios.png",
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.MoCoSS",
       "infoPlist": {
