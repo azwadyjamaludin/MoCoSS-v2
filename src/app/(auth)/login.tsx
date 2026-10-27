@@ -1,5 +1,7 @@
+import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations } from '@/context/localization';
 import { Link, useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,10 +19,12 @@ import {
 const AUTH_API_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/auth/login`;
 
 export default function LoginScreen() {
+  const { lang, toggleLanguage } = useLanguage();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth()
 
   const handleStandardLogin = async () => {
     if (!email || !password) {
@@ -40,13 +44,7 @@ export default function LoginScreen() {
       const data = await response.json();
       
       if (response.ok) {
-        // Save the JWT token securely to local storage
-        await SecureStore.setItemAsync('userToken', data.token);
-        await SecureStore.setItemAsync('userData', JSON.stringify(data.user));
-
-        Alert.alert('Welcome', `Logged in as ${data.user.fullName}`);
-        // Navigate to the app home/dashboard route
-        router.replace('/');
+        await login(data.user,data.token);
       } else {
         Alert.alert('Authentication Failed', data.error || 'Invalid credentials.');
       }
@@ -70,13 +68,17 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.card}>
+      <TouchableOpacity style={styles.langToggle} onPress={toggleLanguage} activeOpacity={0.8}>
+          <Text style={styles.langText}>{lang === 'BM' ? '🌐 BM' : '🌐 EN'}</Text>
+      </TouchableOpacity>
+    <View style={styles.card}>
         <Text style={styles.brandTitle}>MoCoSS</Text>
-        <Text style={styles.brandSubtitle}>Clinical Supervision Platform</Text>
-
+        <Text style={styles.brandSubtitle}>{translations[lang].brandSubtitle}
+        </Text>
+     
         {/* Input Fields */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email Address</Text>
+          <Text style={styles.label}>{translations[lang].emailAddress}</Text>
           <TextInput
             style={styles.input}
             placeholder="supervisor@mocoss.my"
@@ -89,7 +91,7 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Password</Text>
+          <Text style={styles.label}>{translations[lang].password}</Text>
           <TextInput
             style={styles.input}
             placeholder="••••••••"
@@ -109,30 +111,29 @@ export default function LoginScreen() {
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.loginButtonText}>Sign In</Text>
+            <Text style={styles.loginButtonText}>{translations[lang].login}</Text>
           )}
         </TouchableOpacity>
 
         <View style={styles.dividerContainer}>
           <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
+          <Text style={styles.dividerText}>{translations[lang].or}</Text>
           <View style={styles.dividerLine} />
         </View>
 
         {/* Future MyDigital ID Option */}
         <TouchableOpacity style={styles.myDigitalIdButton} onPress={handleMyDigitalIDLogin}>
-          <Text style={styles.myDigitalIdText}>Sign in with MyDigital ID</Text>
+          <Text style={styles.myDigitalIdText}>{translations[lang].signinWithMyDigitalID}</Text>
         </TouchableOpacity>
 
         <View style={styles.dividerContainer}>
-          <View style={styles.dividerLine} />
-          <Link style={styles.registerText} href="/register">
-            Don't have an account? Register here
+          <View style={styles.dividerLine} /></View>
+           <Link style={styles.registerText} href="/register">
+            {translations[lang].noAccount} {translations[lang].signUp}
           </Link>
         </View>
-
-      </View>
-    </KeyboardAvoidingView>
+   </KeyboardAvoidingView>
+  
   );
 }
 
@@ -166,6 +167,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
     marginTop: 4,
+  },
+   langToggle: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  langText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   inputGroup: {
     marginBottom: 20,

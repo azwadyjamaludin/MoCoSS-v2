@@ -4,13 +4,13 @@
     "slug": "MoCoSS",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/mocoss.png",
     "scheme": "mocossv2",
     "userInterfaceStyle": "automatic",
    "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/mocos-adaptive-icon.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
@@ -22,7 +22,7 @@
       "package": "com.anonymous.MoCoSS"
     },
     "ios": {
-      "icon": "./assets/icon.png",
+      "icon": "./assets/images/mocoss.png",
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.MoCoSS",
       "infoPlist": {

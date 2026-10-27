@@ -1,11 +1,13 @@
-// app/(auth)/_layout.tsx
+import { LanguageProvider } from '@/context/LanguageContext';
 import { Stack } from 'expo-router';
 
 export default function AuthLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="login" />
+    <LanguageProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="login" />
       <Stack.Screen name="register" />
     </Stack>
+    </LanguageProvider>
   );
 }

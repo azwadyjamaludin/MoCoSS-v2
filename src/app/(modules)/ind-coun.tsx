@@ -5,6 +5,8 @@ import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Header from '../../components/Header';
 import { useLanguage } from '../../context/LanguageContext';
 import { translations } from '../../context/localization';
 
@@ -209,16 +211,12 @@ export default function IndividualCounselingScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{translations[lang].indCounSessionTitle}</Text>
-      </View>
-
+    <SafeAreaView style={styles.container}>
+      <Header subtitle={translations[lang].indCounSessionTitle}/>
+      <ScrollView contentContainerStyle={styles.container}>
+        
       <View style={styles.card}>
-        <Text style={styles.sectionHeader}>Video Session Mode</Text>
+        <Text style={styles.sectionHeader}>{translations[lang].vidSesMode}</Text>
         <CameraView style={styles.cameraPreview} ref={cameraRef} facing="front">
           <View style={styles.overlayContainer}>
             <Text style={styles.timerDisplay}>{formatTime(secondsElapsed)}</Text>
@@ -230,28 +228,28 @@ export default function IndividualCounselingScreen() {
           onPress={handleToggleSession}
         >
           <Ionicons name={isSessionActive ? "stop-circle" : "videocam"} size={20} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.buttonText}>{isSessionActive ? "End Video Session" : "Start Video Session"}</Text>
+          <Text style={styles.buttonText}>{isSessionActive ? translations[lang].endSession : translations[lang].startSession}</Text>
         </TouchableOpacity>
         
-        {recordedVideoUri && <Text style={styles.successUriText}>✓ Video cached securely</Text>}
+        {recordedVideoUri && <Text style={styles.successUriText}>{translations[lang].videoCached}</Text>}
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionHeader}>Audio-Only Recording Mode</Text>
+        <Text style={styles.sectionHeader}>{translations[lang].audioOnlyMode}</Text>
         <TouchableOpacity 
           style={[styles.actionButton, isAudioRecording ? styles.stopButton : styles.audioStartButton]} 
           onPress={handleToggleAudioRecording}
           disabled={isSessionActive}
         >
           <Ionicons name={isAudioRecording ? "stop-circle" : "mic"} size={20} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.buttonText}>{isAudioRecording ? "Stop Audio Recording" : "Start Audio-Only Recording"}</Text>
+          <Text style={styles.buttonText}>{isAudioRecording ? translations[lang].endSession : translations[lang].startSession}</Text>
         </TouchableOpacity>
         
-        {recordedAudioUri && <Text style={styles.successUriText}>✓ Audio recorded and cached</Text>}
+        {recordedAudioUri && <Text style={styles.successUriText}>{translations[lang].audioCached}</Text>}
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Client Status / Mood Observation</Text>
+        <Text style={styles.label}>{translations[lang].clientStatus}</Text>
         <TextInput
           style={styles.input}
           placeholder="e.g., Stable, Reflective"
@@ -263,10 +261,10 @@ export default function IndividualCounselingScreen() {
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Detailed Session Notes</Text>
+        <Text style={styles.label}>{translations[lang].detSesNotes}</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
-          placeholder="Enter notes observed during the consultation..."
+          placeholder={translations[lang].detSesNotesPlaceholder}
           placeholderTextColor="#999"
           multiline
           numberOfLines={5}
@@ -280,14 +278,15 @@ export default function IndividualCounselingScreen() {
         onPress={handleSaveRecord}
         disabled={isSessionActive || isAudioRecording}
       >
-        <Text style={styles.submitButtonText}>Save Counseling Record</Text>
+        <Text style={styles.submitButtonText}>{translations[lang].savedCounRecBtn}</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: '#f8f9fa', flexGrow: 1 },
+  container: { padding: 20, backgroundColor: '#0B0F19', flexGrow: 1 },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   permissionText: { textAlign: 'center', marginBottom: 15, fontSize: 16, color: '#333' },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, marginTop: 10 },

@@ -61,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await SecureStore.deleteItemAsync('userToken');
     await SecureStore.deleteItemAsync('userData');
     await SecureStore.deleteItemAsync('lastRoute');
+
     setUser(null);
     router.replace('/(auth)/login' as Href);
   };

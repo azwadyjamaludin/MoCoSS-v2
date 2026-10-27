@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Header from '../../components/Header';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { translations } from '../../context/localization';
@@ -177,22 +178,7 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>MoCoSS</Text>
-          <Text style={styles.subtitle}>
-            {lang === 'BM' ? 'Sistem Penyeliaan Kaunseling' : 'Counselling Supervision System'}
-          </Text>
-        </View>
-
-        {/* Global Language Toggle */}
-        <TouchableOpacity style={styles.langToggle} onPress={toggleLanguage} activeOpacity={0.8}>
-          <Ionicons name="globe-outline" size={16} color="#38BDF8" />
-          <Text style={styles.langText}>{lang === 'BM' ? 'BM' : 'EN'}</Text>
-        </TouchableOpacity>
-      </View>
-
+     <Header subtitle={translations[lang].dashboard}/> 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* User Card */}
         <View style={styles.welcomeCard}>

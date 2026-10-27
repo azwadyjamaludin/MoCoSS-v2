@@ -1,11 +1,14 @@
-// app/(modules)/_layout.tsx
 import { Stack } from 'expo-router';
+import { LanguageProvider } from '../../context/LanguageContext';
 
 export default function ModuleLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="dashboard" />
-      <Stack.Screen name="ind-coun" />
-    </Stack>
+    <LanguageProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="dashboard" />
+        <Stack.Screen name="ind-coun" />
+        <Stack.Screen name="grp-coun" />
+      </Stack>
+    </LanguageProvider>
   );
 }

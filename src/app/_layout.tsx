@@ -1,59 +1,57 @@
-import { useEffect, useState } from 'react';
-import { useColorScheme } from 'react-native';
+import { DarkTheme, DefaultTheme, Href, Slot, ThemeProvider, useRouter, useSegments } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import { ActivityIndicator, useColorScheme, View } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { LanguageProvider } from '@/context/LanguageContext';
-import { DarkTheme, DefaultTheme, Href, Slot, ThemeProvider, useRouter, useSegments } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
-import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootNavStack() {
   const colorScheme = useColorScheme();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading } = useAuth(); 
   
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    // Check authentication token from storage
-    const checkToken = async () => {
-      try {
-        const token = await SecureStore.getItemAsync('userToken');
-        setIsAuthenticated(!!token);
-      } catch (e) {
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    checkToken();
-  }, []);
-
-  useEffect(() => {
     if (isLoading) return;
+
     const firstSegment = segments[0] as string | undefined;
     const inAuthGroup = firstSegment === '(auth)' || firstSegment === 'auth';
-    //const inAuthGroup = segments[0] === '(auth)';
+    const isAuthenticated = !!user;
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login' as Href);
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/' as Href);
+      router.replace('/(modules)/dashboard' as Href);
     }
-  }, [isAuthenticated, segments, isLoading]);
+  }, [user, segments, isLoading]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
+        <ActivityIndicator size="large" color="#2563EB" />
+      </View>
+    );
+  }
 
   return (
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <AnimatedSplashOverlay />
+      <Slot />
+    </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <AuthProvider>
-    <LanguageProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AnimatedSplashOverlay />
-        <Slot />
-      </ThemeProvider>
-    </LanguageProvider>
+      <LanguageProvider>
+        <RootNavStack />
+      </LanguageProvider>
     </AuthProvider>
   );
 }
