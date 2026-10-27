@@ -8,6 +8,7 @@ export default function ModuleLayout() {
         <Stack.Screen name="dashboard" />
         <Stack.Screen name="ind-coun" />
         <Stack.Screen name="grp-coun" />
+        <Stack.Screen name="log-book" />
       </Stack>
     </LanguageProvider>
   );

@@ -1,6 +1,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/context/localization';
+import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -69,7 +70,8 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <TouchableOpacity style={styles.langToggle} onPress={toggleLanguage} activeOpacity={0.8}>
-          <Text style={styles.langText}>{lang === 'BM' ? '🌐 BM' : '🌐 EN'}</Text>
+          <Ionicons name="globe-outline" size={18} color="#38BDF8" />
+        <Text style={styles.langText}>{lang === 'BM' ? 'BM | EN' : 'EN | BM'}</Text>
       </TouchableOpacity>
     <View style={styles.card}>
         <Text style={styles.brandTitle}>MoCoSS</Text>
@@ -138,112 +140,21 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0B0F19',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: '#111827',
-    borderRadius: 20,
-    padding: 28,
-    borderWidth: 1,
-    borderColor: '#1F2937',
-  },
-  brandTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#38BDF8',
-    textAlign: 'center',
-    letterSpacing: 2,
-  },
-  brandSubtitle: {
-    fontSize: 13,
-    color: '#94A3B8',
-    textAlign: 'center',
-    marginBottom: 32,
-    marginTop: 4,
-  },
-   langToggle: {
-    backgroundColor: '#1E293B',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  langText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    color: '#CBD5E1',
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: '#F8FAFC',
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  loginButton: {
-    backgroundColor: '#0284C7',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  loginButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#1E293B',
-  },
-  dividerText: {
-    color: '#64748B',
-    paddingHorizontal: 12,
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  registerText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  myDigitalIdButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: '#38BDF8',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  myDigitalIdText: {
-    color: '#38BDF8',
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  container: {flex: 1,backgroundColor: '#0B0F19',justifyContent: 'center',alignItems: 'center',padding: 24,},
+  card: {width: '100%',maxWidth: 400,backgroundColor: '#111827',borderRadius: 20,padding: 28,borderWidth: 1,borderColor: '#1F2937',},
+  brandTitle: {fontSize: 32,fontWeight: 'bold',color: '#38BDF8',textAlign: 'center',letterSpacing: 2,},
+  brandSubtitle: {fontSize: 13,color: '#94A3B8',textAlign: 'center',marginBottom: 32,marginTop: 4,},
+  langToggle: {flexDirection: 'row',alignItems: 'center',backgroundColor: '#334155',paddingHorizontal: 12,paddingVertical: 8,borderRadius: 20,gap: 6,borderWidth: 1,borderColor: '#475569',},
+  langText: {color: '#FFFFFF',fontSize: 12,fontWeight: 'bold',},
+  inputGroup: {marginBottom: 20,},
+  label: {color: '#CBD5E1',fontSize: 13,fontWeight: '600',marginBottom: 8,},
+  input: {backgroundColor: '#1E293B',borderRadius: 12,paddingHorizontal: 16,paddingVertical: 14,color: '#F8FAFC',fontSize: 15,borderWidth: 1,borderColor: '#334155',},
+  loginButton: {backgroundColor: '#0284C7',paddingVertical: 16,borderRadius: 12,alignItems: 'center',marginTop: 12,},
+  loginButtonText: {color: '#FFFFFF',fontSize: 16,fontWeight: 'bold',},
+  dividerContainer: {flexDirection: 'row',alignItems: 'center',marginVertical: 24,},
+  dividerLine: {flex: 1,height: 1,backgroundColor: '#1E293B',},
+  dividerText: {color: '#64748B',paddingHorizontal: 12,fontSize: 12,fontWeight: 'bold',},
+  registerText: {color: '#FFFFFF',fontSize: 16,fontWeight: 'bold',},
+  myDigitalIdButton: {backgroundColor: 'transparent',borderWidth: 1.5,borderColor: '#38BDF8',paddingVertical: 14,borderRadius: 12,alignItems: 'center',},
+  myDigitalIdText: {color: '#38BDF8',fontSize: 15,fontWeight: '600',},
 });
