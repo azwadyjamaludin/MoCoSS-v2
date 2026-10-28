@@ -1,53 +1,13 @@
-import RefConsCard, { RefConsItem, RefConsKind } from '@/components/modules/RefConsCard';
 import Header from '@/components/Header';
+import RefConsCard, { RefConsKind } from '@/components/modules/RefConsCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/context/localization';
+import { MOCK_REFCONS } from '@/data/mock/refCons';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-// TODO: replace with data from the backend (e.g. GET /api/refCons/items).
-const MOCK_ITEMS: RefConsItem[] = [
-  {
-    id: '1',
-    kind: 'consultation',
-    topic: 'Unsure how to respond when a client asks for advice on a family decision',
-    caseRef: 'C-014',
-    target: 'Supervisor',
-    updated: '2026-10-26',
-    status: 'responded',
-    ethical: true,
-  },
-  {
-    id: '2',
-    kind: 'referral',
-    topic: 'Persistent low mood and sleep problems, medical review recommended',
-    caseRef: 'C-015',
-    target: 'Psychiatrist / medical',
-    updated: '2026-10-27',
-    status: 'submitted',
-    urgent: true,
-  },
-  {
-    id: '3',
-    kind: 'consultation',
-    topic: 'Feeling overwhelmed after a difficult group session',
-    target: 'Peer',
-    updated: '2026-10-22',
-    status: 'draft',
-  },
-  {
-    id: '4',
-    kind: 'referral',
-    topic: 'Financial hardship affecting attendance, welfare support needed',
-    caseRef: 'C-011',
-    target: 'Social welfare',
-    updated: '2026-10-15',
-    status: 'closed',
-  },
-];
 
 type Filter = 'all' | RefConsKind;
 
@@ -56,7 +16,7 @@ export default function RefConsListScreen() {
   const router = useRouter();
   const bm = lang === 'BM';
   const [filter, setFilter] = useState<Filter>('all');
-  const items = MOCK_ITEMS;
+  const items = MOCK_REFCONS;
 
   const counts = useMemo(
     () => ({
@@ -139,46 +99,17 @@ export default function RefConsListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1, backgroundColor: '#0B0F19' },
   list: { padding: 16, paddingBottom: 96 },
-  summaryCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 14,
-  },
+  summaryCard: {flexDirection: 'row',backgroundColor: '#FFFFFF',borderRadius: 16,padding: 16,borderWidth: 1,borderColor: '#E2E8F0',marginBottom: 14,},
   stat: { flex: 1, alignItems: 'center' },
   statValue: { fontSize: 24, fontWeight: '700' },
   statLabel: { fontSize: 11, color: '#64748B', marginTop: 2, textAlign: 'center' },
-  segment: {
-    flexDirection: 'row',
-    backgroundColor: '#E2E8F0',
-    borderRadius: 12,
-    padding: 3,
-    marginBottom: 14,
-  },
+  segment: {flexDirection: 'row',backgroundColor: '#E2E8F0',borderRadius: 12,padding: 3,marginBottom: 14,},
   segmentButton: { flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: 'center' },
   segmentButtonActive: { backgroundColor: '#FFFFFF' },
   segmentText: { fontSize: 12, fontWeight: '600', color: '#64748B' },
   segmentTextActive: { color: '#DC2626' },
   empty: { textAlign: 'center', color: '#64748B', marginTop: 32 },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 28,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#DC2626',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
+  fab: {position: 'absolute',right: 20,bottom: 28,width: 56,height: 56,borderRadius: 28,backgroundColor: '#DC2626',justifyContent: 'center',alignItems: 'center',elevation: 4,shadowColor: '#000',shadowOffset: { width: 0, height: 2 },shadowOpacity: 0.2,shadowRadius: 4,},
 });

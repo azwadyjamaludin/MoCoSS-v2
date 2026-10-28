@@ -1,4 +1,5 @@
 import { useAuth } from '@/context/AuthContext';
+import { emptySections, findCase, MOCK_SESSIONS, SectionKey, SectionValue } from '@/data/mock/caseAnal';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -19,14 +20,6 @@ import Header from '../../../components/Header';
 import { CaseStatus } from '../../../components/modules/CaseCard';
 import { useLanguage } from '../../../context/LanguageContext';
 import { translations } from '../../../context/localization';
-
-type SectionKey = 'concern' | 'background' | 'assessment' | 'formulation' | 'plan' | 'ethics';
-type AiState = 'none' | 'pending' | 'reviewed'; // pending = AI wrote it, a human has not confirmed it yet
-
-interface SectionValue {
-  text: string;
-  ai: AiState;
-}
 
 const SECTIONS: { key: SectionKey; bm: string; en: string; hintBm: string; hintEn: string }[] = [
   {
@@ -73,22 +66,6 @@ const SECTIONS: { key: SectionKey; bm: string; en: string; hintBm: string; hintE
   },
 ];
 
-// TODO: replace with sessions from Individual / Group Counseling for this case.
-const MOCK_SESSIONS = [
-  { id: 's1', label: '2026-10-06 · Individual' },
-  { id: 's2', label: '2026-10-13 · Individual' },
-  { id: 's3', label: '2026-10-20 · Individual' },
-];
-
-const emptySections = (): Record<SectionKey, SectionValue> => ({
-  concern: { text: '', ai: 'none' },
-  background: { text: '', ai: 'none' },
-  assessment: { text: '', ai: 'none' },
-  formulation: { text: '', ai: 'none' },
-  plan: { text: '', ai: 'none' },
-  ethics: { text: '', ai: 'none' },
-});
-
 export default function CaseAnalysisDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const isNew = id === 'new';
@@ -97,16 +74,18 @@ export default function CaseAnalysisDetailScreen() {
   const { checkAuthToken } = useAuth();
   const bm = lang === 'BM';
 
-  // TODO: when !isNew, load the case from the backend instead of starting empty.
-  const [caseRef, setCaseRef] = useState(isNew ? '' : 'C-015');
-  const [status] = useState<CaseStatus>('draft');
-  const [sections, setSections] = useState<Record<SectionKey, SectionValue>>(emptySections);
-  const [linked, setLinked] = useState<string[]>([]);
+  // Mock data for now. TODO: replace findCase with a backend fetch (GET /api/caseAnal/cases/:id).
+  const entry = isNew ? undefined : findCase(id);
+  const [caseRef, setCaseRef] = useState(entry?.caseRef ?? '');
+  const [status] = useState<CaseStatus>(entry?.status ?? 'draft');
+  const [sections, setSections] = useState<Record<SectionKey, SectionValue>>(() => entry?.sections ?? emptySections());
+  const [linked, setLinked] = useState<string[]>(entry?.linkedSessionIds ?? []);
   const [aiLoading, setAiLoading] = useState<SectionKey | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // TODO: only when status is 'reviewed' or 'revision'; comes from the supervisor.
-  const feedback = null as { rating: number; comment: string } | null;
+  const feedback = entry?.supervisorFeedback
+    ? { rating: entry.rating, comment: entry.supervisorFeedback }
+    : null;
 
   const editable = status === 'draft' || status === 'revision';
   const allFilled = SECTIONS.every((s) => sections[s.key].text.trim().length > 0);
@@ -208,14 +187,37 @@ export default function CaseAnalysisDetailScreen() {
       ],
     );
 
+  if (!isNew && !entry) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header subtitle={translations[lang].caseAnalTitle} />
+        <View style={styles.notFound}>
+          <Text style={styles.notFoundText}>{bm ? 'Rekod tidak ditemui.' : 'Record not found.'}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Header subtitle={translations[lang].caseAnalTitle} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {!editable && (
+            <View style={styles.lockedNote}>
+              <Ionicons name="lock-closed-outline" size={16} color="#475569" />
+              <Text style={styles.lockedText}>
+                {bm ? 'Analisis kes ini telah dihantar dan tidak boleh diedit lagi.' : 'This case analysis has been submitted and can no longer be edited.'}
+              </Text>
+            </View>
+          )}
+
           {feedback && (
             <View style={styles.feedbackCard}>
-              <Text style={styles.feedbackTitle}>{bm ? 'Maklum balas penyelia' : 'Supervisor feedback'}</Text>
+              <Text style={styles.feedbackTitle}>
+                {bm ? 'Maklum balas penyelia' : 'Supervisor feedback'}
+                {feedback.rating !== undefined ? `  ★ ${feedback.rating.toFixed(1)}` : ''}
+              </Text>
               <Text style={styles.feedbackText}>{feedback.comment}</Text>
             </View>
           )}
@@ -361,7 +363,19 @@ export default function CaseAnalysisDetailScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  notFoundText: { fontSize: 14, color: '#64748B', textAlign: 'center' },
+  lockedNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  lockedText: { flex: 1, fontSize: 12, color: '#475569', lineHeight: 16 },
+  container: { flex: 1, backgroundColor: '#0B0F19' },
   content: { padding: 16, paddingBottom: 48 },
   label: { fontSize: 12, fontWeight: '700', color: '#475569', marginBottom: 6, marginTop: 4 },
   input: {backgroundColor: '#FFFFFF',borderWidth: 1,borderColor: '#E2E8F0',borderRadius: 12,paddingHorizontal: 14,paddingVertical: 10,fontSize: 14,color: '#0F172A',},

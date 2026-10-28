@@ -3,6 +3,7 @@ import { REFCONS_STATUS, RefConsKind, RefConsStatus } from '@/components/modules
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/context/localization';
+import { findRefCons } from '@/data/mock/refCons';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -42,32 +43,34 @@ export default function RefConsDetailScreen() {
   const { checkAuthToken } = useAuth();
   const bm = lang === 'BM';
 
+  // Mock data for now. TODO: replace findRefCons with a backend fetch (GET /api/refCons/items/:id).
+  const entry = isNew ? undefined : findRefCons(id);
+
   // The kind is chosen when creating and cannot change afterwards.
-  // TODO: when !isNew, load the record (including its kind) from the backend.
-  const kind: RefConsKind = kindParam === 'referral' ? 'referral' : 'consultation';
+  const kind: RefConsKind = entry ? entry.kind : kindParam === 'referral' ? 'referral' : 'consultation';
   const isReferral = kind === 'referral';
 
-  const [status] = useState<RefConsStatus>('draft');
-  const [topic, setTopic] = useState('');
-  const [caseRef, setCaseRef] = useState('');
+  const [status] = useState<RefConsStatus>(entry?.status ?? 'draft');
+  const [topic, setTopic] = useState(entry?.topic ?? '');
+  const [caseRef, setCaseRef] = useState(entry?.caseRef ?? '');
   const [saving, setSaving] = useState(false);
 
   // Consultation fields
-  const [consultant, setConsultant] = useState('supervisor');
-  const [situation, setSituation] = useState('');
-  const [reflection, setReflection] = useState('');
-  const [question, setQuestion] = useState('');
-  const [ethical, setEthical] = useState(false);
+  const [consultant, setConsultant] = useState(entry?.consultant ?? 'supervisor');
+  const [situation, setSituation] = useState(entry?.situation ?? '');
+  const [reflection, setReflection] = useState(entry?.reflection ?? '');
+  const [question, setQuestion] = useState(entry?.question ?? '');
+  const [ethical, setEthical] = useState(entry?.ethical ?? false);
 
   // Referral fields
-  const [target, setTarget] = useState('');
-  const [urgent, setUrgent] = useState(false);
-  const [reason, setReason] = useState('');
-  const [workSoFar, setWorkSoFar] = useState('');
-  const [consent, setConsent] = useState(false);
+  const [target, setTarget] = useState(entry?.targetKey ?? '');
+  const [urgent, setUrgent] = useState(entry?.urgent ?? false);
+  const [reason, setReason] = useState(entry?.reason ?? '');
+  const [workSoFar, setWorkSoFar] = useState(entry?.workSoFar ?? '');
+  const [consent, setConsent] = useState(entry?.consent ?? false);
 
-  // TODO: filled by the consultant / receiving service once status is 'responded'.
-  const response = null as string | null;
+  // Reply from the consultant or the receiving service.
+  const response = entry?.response ?? null;
 
   const editable = status === 'draft';
   const statusInfo = REFCONS_STATUS[status];
@@ -173,6 +176,17 @@ export default function RefConsDetailScreen() {
     </View>
   );
 
+  if (!isNew && !entry) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header subtitle={translations[lang].refConsTitle} />
+        <View style={styles.notFound}>
+          <Text style={styles.notFoundText}>{bm ? 'Rekod tidak ditemui.' : 'Record not found.'}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Header subtitle={translations[lang].refConsTitle} />
@@ -189,6 +203,15 @@ export default function RefConsDetailScreen() {
               <Text style={[styles.statusText, { color: statusInfo.color }]}>{bm ? statusInfo.bm : statusInfo.en}</Text>
             </View>
           </View>
+
+          {!editable && (
+            <View style={styles.lockedNote}>
+              <Ionicons name="lock-closed-outline" size={16} color="#475569" />
+              <Text style={styles.lockedText}>
+                {bm ? 'Rekod ini telah dihantar dan tidak boleh diedit lagi.' : 'This record has been sent and can no longer be edited.'}
+              </Text>
+            </View>
+          )}
 
           {response && (
             <View style={styles.responseCard}>
@@ -336,88 +359,37 @@ export default function RefConsDetailScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  notFoundText: { fontSize: 14, color: '#64748B', textAlign: 'center' },
+  lockedNote: {flexDirection: 'row',alignItems: 'center',gap: 8,backgroundColor: '#F1F5F9',borderRadius: 12,padding: 12,marginBottom: 12,},
+  lockedText: { flex: 1, fontSize: 12, color: '#475569', lineHeight: 16 },
+  container: { flex: 1, backgroundColor: '#0B0F19' },
   content: { padding: 16, paddingBottom: 48 },
   kindRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   kindText: { flex: 1, fontSize: 15, fontWeight: '700', color: '#0F172A' },
   statusChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   statusText: { fontSize: 11, fontWeight: '700' },
   label: { fontSize: 12, fontWeight: '700', color: '#475569', marginBottom: 6, marginTop: 14 },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: '#0F172A',
-  },
+  input: {backgroundColor: '#FFFFFF',borderWidth: 1,borderColor: '#E2E8F0',borderRadius: 12,paddingHorizontal: 14,paddingVertical: 10,fontSize: 14,color: '#0F172A',},
   multiline: { minHeight: 100 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
+  chip: {paddingHorizontal: 12,paddingVertical: 7,borderRadius: 999,backgroundColor: '#FFFFFF',borderWidth: 1,borderColor: '#E2E8F0',},
   chipOn: { backgroundColor: '#DC2626', borderColor: '#DC2626' },
   chipText: { fontSize: 12, fontWeight: '600', color: '#475569' },
   chipTextOn: { color: '#FFFFFF' },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginTop: 14,
-  },
+  toggleRow: {flexDirection: 'row',alignItems: 'center',justifyContent: 'space-between',backgroundColor: '#FFFFFF',borderWidth: 1,borderColor: '#E2E8F0',borderRadius: 12,paddingHorizontal: 14,paddingVertical: 8,marginTop: 14,},
   toggleLabel: { flex: 1, fontSize: 13, fontWeight: '600', color: '#0F172A', paddingRight: 8 },
-  privacyNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#FEE2E2',
-    borderRadius: 12,
-    padding: 12,
-  },
+  privacyNote: {flexDirection: 'row',alignItems: 'center',gap: 8,backgroundColor: '#FEE2E2',borderRadius: 12,padding: 12,},
   privacyText: { flex: 1, fontSize: 12, color: '#991B1B', lineHeight: 16 },
-  urgentNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#FEF3C7',
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 8,
-  },
+  urgentNote: {flexDirection: 'row',alignItems: 'center',gap: 8,backgroundColor: '#FEF3C7',borderRadius: 12,padding: 12,marginTop: 8,},
   urgentText: { flex: 1, fontSize: 12, color: '#92400E', lineHeight: 16 },
   consentHint: { fontSize: 11, color: '#64748B', marginTop: 6 },
   responseCard: { backgroundColor: '#DBEAFE', borderRadius: 12, padding: 14, marginBottom: 12 },
   responseTitle: { fontSize: 13, fontWeight: '700', color: '#1E40AF', marginBottom: 4 },
   responseText: { fontSize: 12, color: '#1E40AF', lineHeight: 17 },
-  primaryButton: {
-    backgroundColor: '#DC2626',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 24,
-  },
+  primaryButton: {backgroundColor: '#DC2626',borderRadius: 14,paddingVertical: 14,alignItems: 'center',marginTop: 24,},
   buttonDisabled: { opacity: 0.4 },
   primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  secondaryButton: {
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#DC2626',
-  },
+  secondaryButton: {borderRadius: 14,paddingVertical: 14,alignItems: 'center',marginTop: 10,borderWidth: 1,borderColor: '#DC2626',},
   secondaryButtonText: { color: '#DC2626', fontSize: 15, fontWeight: '700' },
 });

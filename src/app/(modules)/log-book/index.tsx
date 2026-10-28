@@ -1,4 +1,5 @@
-import LogEntryCard, { LogEntry, LogStatus } from '@/components/modules/LogEntryCard';
+import LogEntryCard, { LogStatus } from '@/components/modules/LogEntryCard';
+import { MOCK_LOG_ENTRIES } from '@/data/mock/logBook';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -10,14 +11,6 @@ import { translations } from '../../../context/localization';
 
 // TODO: replace with the real requirement from the programme / board.
 const TARGET_HOURS = 100;
-
-// TODO: replace with data from the backend (e.g. GET /api/logBook/entries).
-const MOCK_ENTRIES: LogEntry[] = [
-  { id: '1', date: '2026-10-20', hours: 1.5, category: 'individual', caseRef: 'C-014', status: 'approved' },
-  { id: '2', date: '2026-10-22', hours: 2, category: 'group', caseRef: 'G-003', status: 'submitted' },
-  { id: '3', date: '2026-10-25', hours: 1, category: 'supervision', status: 'returned' },
-  { id: '4', date: '2026-10-27', hours: 1.5, category: 'individual', caseRef: 'C-015', status: 'draft' },
-];
 
 type Filter = 'all' | LogStatus;
 
@@ -33,7 +26,7 @@ export default function LogBookScreen() {
   const { lang } = useLanguage();
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>('all');
-  const entries = MOCK_ENTRIES;
+  const entries = MOCK_LOG_ENTRIES;
 
   const approvedHours = useMemo(
     () => entries.filter((e) => e.status === 'approved').reduce((sum, e) => sum + e.hours, 0),

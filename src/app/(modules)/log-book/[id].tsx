@@ -1,4 +1,5 @@
 import { useAuth } from '@/context/AuthContext';
+import { findLogEntry } from '@/data/mock/logBook';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -15,8 +16,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LogCategory, LogStatus } from '../../../components//modules/LogEntryCard';
 import Header from '../../../components/Header';
+import { LogCategory, LogStatus } from '../../../components/modules/LogEntryCard';
 import { useLanguage } from '../../../context/LanguageContext';
 import { translations } from '../../../context/localization';
 
@@ -54,18 +55,18 @@ export default function LogBookDetailScreen() {
   const { checkAuthToken } = useAuth();
   const bm = lang === 'BM';
 
-  // TODO: when !isNew, load the entry from the backend instead of starting empty.
-  const [status] = useState<LogStatus>('draft');
-  const [date, setDate] = useState(todayLocal());
-  const [hours, setHours] = useState(1);
-  const [category, setCategory] = useState<LogCategory>('individual');
-  const [caseRef, setCaseRef] = useState('');
-  const [activity, setActivity] = useState('');
-  const [learning, setLearning] = useState('');
+  // Mock data for now. TODO: replace findLogEntry with a backend fetch (GET /api/logBook/entries/:id).
+  const entry = isNew ? undefined : findLogEntry(id);
+  const [status] = useState<LogStatus>(entry?.status ?? 'draft');
+  const [date, setDate] = useState(entry?.date ?? todayLocal());
+  const [hours, setHours] = useState(entry?.hours ?? 1);
+  const [category, setCategory] = useState<LogCategory>(entry?.category ?? 'individual');
+  const [caseRef, setCaseRef] = useState(entry?.caseRef ?? '');
+  const [activity, setActivity] = useState(entry?.activity ?? '');
+  const [learning, setLearning] = useState(entry?.learning ?? '');
   const [saving, setSaving] = useState(false);
 
-  // TODO: only when status is 'returned' or 'approved'; comes from the supervisor.
-  const supervisorComment = null as string | null;
+  const supervisorComment = entry?.supervisorComment ?? null;
 
   const editable = status === 'draft' || status === 'returned';
   const dateOk = isValidPastOrToday(date);
@@ -117,11 +118,31 @@ export default function LogBookDetailScreen() {
       ],
     );
 
+  if (!isNew && !entry) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header subtitle={translations[lang].logBookTitle} />
+        <View style={styles.notFound}>
+          <Text style={styles.notFoundText}>{bm ? 'Rekod tidak ditemui.' : 'Record not found.'}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Header subtitle={translations[lang].logBookTitle} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {!editable && (
+            <View style={styles.lockedNote}>
+              <Ionicons name="lock-closed-outline" size={16} color="#475569" />
+              <Text style={styles.lockedText}>
+                {bm ? 'Catatan ini telah dihantar dan tidak boleh diedit lagi.' : 'This entry has been submitted and can no longer be edited.'}
+              </Text>
+            </View>
+          )}
+
           {supervisorComment && (
             <View style={styles.feedbackCard}>
               <Text style={styles.feedbackTitle}>{bm ? 'Maklum balas penyelia' : 'Supervisor comment'}</Text>
@@ -274,19 +295,14 @@ export default function LogBookDetailScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  notFoundText: { fontSize: 14, color: '#64748B', textAlign: 'center' },
+  lockedNote: {flexDirection: 'row',alignItems: 'center',gap: 8,backgroundColor: '#F1F5F9',borderRadius: 12,padding: 12,marginBottom: 12,},
+  lockedText: { flex: 1, fontSize: 12, color: '#475569', lineHeight: 16 },
+  container: { flex: 1, backgroundColor: '#0B0F19' },
   content: { padding: 16, paddingBottom: 48 },
   label: { fontSize: 12, fontWeight: '700', color: '#475569', marginBottom: 6, marginTop: 14 },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: '#0F172A',
-  },
+  input: {backgroundColor: '#FFFFFF',borderWidth: 1,borderColor: '#E2E8F0',borderRadius: 12,paddingHorizontal: 14,paddingVertical: 10,fontSize: 14,color: '#0F172A',},
   inputError: { borderColor: '#DC2626' },
   errorText: { fontSize: 11, color: '#DC2626', marginTop: 4 },
   multiline: { minHeight: 100 },
@@ -294,61 +310,22 @@ const styles = StyleSheet.create({
   dateInput: { flex: 1 },
   todayButton: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: '#FEF3C7' },
   todayText: { fontSize: 12, fontWeight: '700', color: '#B45309' },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-  },
+  stepper: {flexDirection: 'row',alignItems: 'center',alignSelf: 'flex-start',backgroundColor: '#FFFFFF',borderWidth: 1,borderColor: '#E2E8F0',borderRadius: 12,},
   stepButton: { padding: 12 },
   stepValue: { minWidth: 56, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#0F172A' },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
+  chip: {flexDirection: 'row',alignItems: 'center',gap: 6,paddingHorizontal: 12,paddingVertical: 7,borderRadius: 999,backgroundColor: '#FFFFFF',borderWidth: 1,borderColor: '#E2E8F0',},
   chipOn: { backgroundColor: '#D97706', borderColor: '#D97706' },
   chipText: { fontSize: 12, fontWeight: '600', color: '#475569' },
   chipTextOn: { color: '#FFFFFF' },
-  privacyNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#FEF3C7',
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 10,
-  },
+  privacyNote: {flexDirection: 'row',alignItems: 'center',gap: 8,backgroundColor: '#FEF3C7',borderRadius: 12,padding: 12,marginTop: 10,},
   privacyText: { flex: 1, fontSize: 12, color: '#92400E', lineHeight: 16 },
   feedbackCard: { backgroundColor: '#FEE2E2', borderRadius: 12, padding: 14 },
   feedbackTitle: { fontSize: 13, fontWeight: '700', color: '#991B1B', marginBottom: 4 },
   feedbackText: { fontSize: 12, color: '#991B1B', lineHeight: 17 },
-  primaryButton: {
-    backgroundColor: '#D97706',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 24,
-  },
+  primaryButton: {backgroundColor: '#D97706',borderRadius: 14,paddingVertical: 14,alignItems: 'center',marginTop: 24,},
   buttonDisabled: { opacity: 0.4 },
   primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  secondaryButton: {
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#D97706',
-  },
+  secondaryButton: {borderRadius: 14,paddingVertical: 14,alignItems: 'center',marginTop: 10,borderWidth: 1,borderColor: '#D97706',},
   secondaryButtonText: { color: '#D97706', fontSize: 15, fontWeight: '700' },
 });

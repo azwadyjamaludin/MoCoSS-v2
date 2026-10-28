@@ -1,61 +1,13 @@
-import CaseCard, { CaseAnalysis, CaseStatus } from '@/components//modules/CaseCard';
 import Header from '@/components/Header';
+import CaseCard, { CaseStatus } from '@/components/modules/CaseCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/context/localization';
+import { MOCK_CASES } from '@/data/mock/caseAnal';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-// TODO: replace with data from the backend (e.g. GET /api/caseAnal/cases).
-const MOCK_CASES: CaseAnalysis[] = [
-  {
-    id: '1',
-    caseRef: 'C-014',
-    focus: 'Adolescent, exam-related anxiety and sleep difficulty, 6 sessions to date.',
-    updated: '2026-10-26',
-    status: 'reviewed',
-    sessionsLinked: 6,
-    sectionsDone: 6,
-    sectionsTotal: 6,
-    aiAssisted: true,
-    rating: 4.0,
-  },
-  {
-    id: '2',
-    caseRef: 'C-015',
-    focus: 'Adult, work-related burnout and low motivation, early assessment stage.',
-    updated: '2026-10-27',
-    status: 'draft',
-    sessionsLinked: 2,
-    sectionsDone: 3,
-    sectionsTotal: 6,
-    aiAssisted: true,
-  },
-  {
-    id: '3',
-    caseRef: 'G-003',
-    focus: 'Group of 6, peer conflict and group cohesion; formulation under review.',
-    updated: '2026-10-24',
-    status: 'submitted',
-    sessionsLinked: 4,
-    sectionsDone: 6,
-    sectionsTotal: 6,
-    aiAssisted: false,
-  },
-  {
-    id: '4',
-    caseRef: 'C-011',
-    focus: 'Young adult, grief following family loss; intervention plan needs more detail.',
-    updated: '2026-10-21',
-    status: 'revision',
-    sessionsLinked: 5,
-    sectionsDone: 5,
-    sectionsTotal: 6,
-    aiAssisted: false,
-  },
-];
 
 type Filter = 'all' | CaseStatus;
 
@@ -162,7 +114,7 @@ export default function CaseAnalysisScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1, backgroundColor: '#0B0F19' },
   list: { padding: 16, paddingBottom: 96 },
   summaryCard: {flexDirection: 'row',backgroundColor: '#FFFFFF',borderRadius: 16,padding: 16,borderWidth: 1,borderColor: '#E2E8F0',marginBottom: 12,},
   stat: { flex: 1, alignItems: 'center' },

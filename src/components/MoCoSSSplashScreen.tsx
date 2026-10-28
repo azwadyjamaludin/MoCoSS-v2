@@ -1,22 +1,22 @@
 import { useEffect } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
-    Easing,
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withSequence,
-    withTiming,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from 'react-native-reanimated';
 import Svg, {
-    Circle,
-    Defs,
-    G,
-    LinearGradient,
-    RadialGradient,
-    Rect,
-    Stop,
-    Text as SvgText,
+  Circle,
+  Defs,
+  G,
+  LinearGradient,
+  RadialGradient,
+  Rect,
+  Stop,
+  Text as SvgText,
 } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
@@ -128,7 +128,7 @@ export default function MoCoSSSplashScreen({ onFinish }: MoCoSSSplashScreenProps
         </View>
       </Animated.View>
 
-      <Text style={styles.subtitle}>AI-Driven Clinical Counseling Supervision</Text>
+      <Text style={styles.subtitle}>AI-Driven Counselling Supervision System</Text>
       <Text style={styles.hint}>Tap screen to proceed</Text>
     </Pressable>
   );
