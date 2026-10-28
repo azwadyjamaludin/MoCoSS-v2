@@ -149,6 +149,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Modules Card */}
+        <View style={styles.grid}>
           {modules.map((item) => (
             <ModuleCard
               key={item.id}
@@ -159,9 +160,9 @@ export default function DashboardScreen() {
               isAiPowered={item.aiPowered}
               aiBadgeText={lang === 'BM' ? 'AI' : 'AI'}
               onPress={() => router.push(item.route as Href)}
-            >
-            </ModuleCard>
+            />
           ))}
+        </View>
         
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutClick} activeOpacity={0.8}>

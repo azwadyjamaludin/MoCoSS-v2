@@ -3,9 +3,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../components/Header';
-import { useLanguage } from '../../context/LanguageContext';
-import { translations } from '../../context/localization';
+import Header from '../../../components/Header';
+import { useLanguage } from '../../../context/LanguageContext';
+import { translations } from '../../../context/localization';
 
 // TODO: replace with the real requirement from the programme / board.
 const TARGET_HOURS = 100;
