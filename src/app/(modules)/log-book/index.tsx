@@ -1,5 +1,6 @@
 import LogEntryCard, { LogEntry, LogStatus } from '@/components/modules/LogEntryCard';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,6 +31,7 @@ const FILTERS: { key: Filter; bm: string; en: string }[] = [
 
 export default function LogBookScreen() {
   const { lang } = useLanguage();
+  const router = useRouter();
   const [filter, setFilter] = useState<Filter>('all');
   const entries = MOCK_ENTRIES;
 
@@ -104,18 +106,14 @@ export default function LogBookScreen() {
           <LogEntryCard
             entry={item}
             lang={lang as 'BM' | 'EN'}
-            onPress={() => {
-              // TODO: router.push({ pathname: '/log-book/[id]', params: { id: item.id } })
-            }}
+            onPress={() => router.push({ pathname: '/log-book/[id]', params: { id: item.id } })}
           />
         )}
       />
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.8}
-        onPress={() => {
-          // TODO: router.push('/log-book/new')
-        }}
+        onPress={() => router.push({ pathname: '/log-book/[id]', params: { id: 'new' } })}
       >
         <Ionicons name="add" size={26} color="#FFFFFF" />
       </TouchableOpacity>

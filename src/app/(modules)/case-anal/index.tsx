@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/context/localization';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -68,6 +69,7 @@ const FILTERS: { key: Filter; bm: string; en: string }[] = [
 
 export default function CaseAnalysisScreen() {
   const { lang } = useLanguage();
+  const router = useRouter();
   const [filter, setFilter] = useState<Filter>('all');
   const cases = MOCK_CASES;
 
@@ -144,18 +146,14 @@ export default function CaseAnalysisScreen() {
           <CaseCard
             item={item}
             lang={lang as 'BM' | 'EN'}
-            onPress={() => {
-              // TODO: router.push({ pathname: '/case-anal/[id]', params: { id: item.id } })
-            }}
+            onPress={() => router.push({ pathname: '/case-anal/[id]', params: { id: item.id } })}
           />
         )}
       />
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.8}
-        onPress={() => {
-          // TODO: router.push('/case-anal/new')
-        }}
+        onPress={() => router.push({ pathname: '/case-anal/[id]', params: { id: 'new' } })}
       >
         <Ionicons name="add" size={26} color="#FFFFFF" />
       </TouchableOpacity>
