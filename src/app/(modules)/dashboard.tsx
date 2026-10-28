@@ -83,7 +83,7 @@ export default function DashboardScreen() {
       description: { [lang]: translations[lang].refConsDesc },
       icon: 'git-network-outline',
       color: '#DC2626',
-      route: '/ref-cons',
+      route: '/ref-cons/index',
     },
     {
       id: 'reflect',
