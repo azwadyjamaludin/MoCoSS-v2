@@ -1,9 +1,9 @@
+import LogEntryCard, { LogEntry, LogStatus } from '@/components/modules/LogEntryCard';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../../components/Header';
-import LogEntryCard, { LogEntry, LogStatus } from '../../components/LogEntryCard';
 import { useLanguage } from '../../context/LanguageContext';
 import { translations } from '../../context/localization';
 

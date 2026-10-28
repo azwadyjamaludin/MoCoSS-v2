@@ -1,3 +1,7 @@
+import ModuleCard from '@/components/modules/ModuleCard';
+import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations } from '@/context/localization';
 import { Ionicons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
 import {
@@ -11,9 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../../components/Header';
-import { useAuth } from '../../context/AuthContext';
-import { useLanguage } from '../../context/LanguageContext';
-import { translations } from '../../context/localization';
 
 interface ModuleItem {
   id: string;
@@ -22,6 +23,7 @@ interface ModuleItem {
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
   route: string;
+  aiPowered?: boolean;
 }
 
 export default function DashboardScreen() {
@@ -44,132 +46,88 @@ export default function DashboardScreen() {
   const modules: ModuleItem[] = [
     {
       id: 'ind_coun',
-      title: { 
-        [lang]: translations[lang].indCounTitle   
-      },
-      description: { 
-        [lang]: translations[lang].indCounDesc 
-      },
+      title: { [lang]: translations[lang].indCounTitle },
+      description: { [lang]: translations[lang].indCounDesc },
       icon: 'person-outline',
       color: '#2563EB',
       route: '/ind-coun',
     },
     {
       id: 'grp_coun',
-      title: { 
-        [lang]: translations[lang].grpCounTitle   
-      },
-      description: { 
-        [lang]: translations[lang].grpCounDesc 
-      },
+      title: { [lang]: translations[lang].grpCounTitle },
+      description: { [lang]: translations[lang].grpCounDesc },
       icon: 'people-outline',
       color: '#0D9488',
       route: '/grp-coun',
     },
     {
       id: 'log_book',
-      title: { 
-        [lang]: translations[lang].logBookTitle 
-      },
-      description: { 
-        [lang]: translations[lang].logBookDesc 
-      },
+      title: { [lang]: translations[lang].logBookTitle },
+      description: { [lang]: translations[lang].logBookDesc },
       icon: 'journal-outline',
       color: '#D97706',
-      route: '/log-book',
+      route: '/log-book/index',
     },
     {
       id: 'case_anal',
-      title: { 
-        [lang]: translations[lang].caseAnalTitle 
-      },
-      description: { 
-        [lang]: translations[lang].caseAnalDesc 
-      },
+      title: { [lang]: translations[lang].caseAnalTitle },
+      description: { [lang]: translations[lang].caseAnalDesc },
       icon: 'analytics-outline',
       color: '#7C3AED',
-      route: '/case-anal',
+      route: '/case-anal/index',
+      aiPowered: true
     },
     {
       id: 'ref_cons',
-      title: { 
-        [lang]: translations[lang].refConsTitle 
-      },
-      description: { 
-        [lang]: translations[lang].refConsDesc 
-      },
+      title: { [lang]: translations[lang].refConsTitle },
+      description: { [lang]: translations[lang].refConsDesc },
       icon: 'git-network-outline',
       color: '#DC2626',
       route: '/ref-cons',
     },
     {
       id: 'reflect',
-      title: { 
-        [lang]: translations[lang].reflectTitle 
-      },
-      description: { 
-        [lang]: translations[lang].reflectDesc 
-      },
+      title: { [lang]: translations[lang].reflectTitle },
+      description: { [lang]: translations[lang].reflectDesc },
       icon: 'chatbubble-ellipses-outline',
       color: '#E11D48',
       route: '/reflect',
     },
     {
       id: 'psy_edu',
-      title: { 
-        [lang]: translations[lang].psyEduTitle 
-      },
-      description: { 
-        [lang]: translations[lang].psyEduDesc 
-      },
+      title: { [lang]: translations[lang].psyEduTitle },
+      description: { [lang]: translations[lang].psyEduDesc },
       icon: 'book-outline',
       color: '#059669',
       route: '/psy-edu',
     },
     {
       id: 'psy_test',
-      title: { 
-        [lang]: translations[lang].psyTestTitle 
-      },
-      description: { 
-        [lang]: translations[lang].psyTestDesc 
-      },
+      title: { [lang]: translations[lang].psyTestTitle },
+      description: { [lang]: translations[lang].psyTestDesc },
       icon: 'clipboard-outline',
       color: '#4F46E5',
       route: '/psy-test',
     },
     {
       id: 'prof_dev',
-      title: { 
-        [lang]: translations[lang].profDevTitle 
-      },
-      description: { 
-        [lang]: translations[lang].profDevDesc 
-      },
+      title: { [lang]: translations[lang].profDevTitle },
+      description: { [lang]: translations[lang].profDevDesc },
       icon: 'ribbon-outline',
       color: '#0891B2',
       route: '/prof-dev',
     },
     {
       id: 'full_mark',
-      title: { 
-        [lang]: translations[lang].fullMarkTitle 
-      },
-      description: { 
-        [lang]: translations[lang].fullMarkDesc 
-      },
+      title: { [lang]: translations[lang].fullMarkTitle },
+      description: { [lang]: translations[lang].fullMarkDesc },
       icon: 'star-outline',
       color: '#CA8A04',
       route: '/full-mark',
     },
-    {
-      id: 'adm_mgt',
-      title: { 
-        [lang]: translations[lang].admMgtTitle 
-      },
-      description: { 
-        [lang]: translations[lang].admMgtDesc 
-      },
+    {id: 'adm_mgt',
+      title: { [lang]: translations[lang].admMgtTitle },
+      description: { [lang]: translations[lang].admMgtDesc },
       icon: 'settings-outline',
       color: '#475569',
       route: '/adm-mgt',
@@ -190,26 +148,21 @@ export default function DashboardScreen() {
           </Text>
         </View>
 
-        {/* Modules Grid */}
-        <View style={styles.grid}>
+        {/* Modules Card */}
           {modules.map((item) => (
-            <TouchableOpacity
+            <ModuleCard
               key={item.id}
-              style={styles.card}
-              activeOpacity={0.7}
+              title={item.title[lang]}
+              description={item.description[lang]}
+              icon={item.icon}
+              color={item.color}
+              isAiPowered={item.aiPowered}
+              aiBadgeText={lang === 'BM' ? 'AI' : 'AI'}
               onPress={() => router.push(item.route as Href)}
             >
-              <View style={[styles.iconContainer, { backgroundColor: item.color + '18' }]}>
-                <Ionicons name={item.icon} size={24} color={item.color} />
-              </View>
-              <Text style={styles.cardTitle}>{item.title[lang]}</Text>
-              <Text style={styles.cardDescription} numberOfLines={2}>
-                {item.description[lang]}
-              </Text>
-            </TouchableOpacity>
+            </ModuleCard>
           ))}
-        </View>
-
+        
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutClick} activeOpacity={0.8}>
           <Ionicons name="log-out-outline" size={18} color="#EF4444" />
