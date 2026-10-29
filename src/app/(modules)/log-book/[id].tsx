@@ -82,7 +82,7 @@ export default function LogBookDetailScreen() {
     }
     setSaving(true);
     try {
-      // PLACEHOLDER endpoint and payload: adjust to your backend.
+      // PLACEHOLDER endpoint and payload
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/logBook/entries${isNew ? '' : `/${id}`}`,
         {

@@ -1,8 +1,9 @@
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/context/localization';
+import { tryTestLogin } from '@/data/mock/mock-auth';
 import { Ionicons } from '@expo/vector-icons';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -21,7 +22,6 @@ const AUTH_API_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/auth/login`;
 
 export default function LoginScreen() {
   const { lang, toggleLanguage } = useLanguage();
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,18 +36,27 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
+      let ok: boolean;
+      let data: any;
+
+      const testLogin =tryTestLogin(email, password)
+      if (testLogin) {
+        ok = true;
+        data = testLogin;
+      } else {
       const response = await fetch(AUTH_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
-      const data = await response.json();
+      ok = response.ok
+      data = await response.json();
       
-      if (response.ok) {
+      if (ok) {
         await login(data.user,data.token);
       } else {
         Alert.alert('Authentication Failed', data.error || 'Invalid credentials.');
+      }
       }
     } catch (error) {
       console.error('Login network error:', error);

@@ -154,7 +154,7 @@ export default function CaseAnalysisDetailScreen() {
     if (!token) return;
     setSaving(true);
     try {
-      // PLACEHOLDER endpoint and payload: adjust to your backend.
+      // PLACEHOLDER endpoint and payload
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/caseAnal/cases${isNew ? '' : `/${id}`}`,
         {
@@ -365,15 +365,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   notFoundText: { fontSize: 14, color: '#94A3B8', textAlign: 'center' },
-  lockedNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-  },
+  lockedNote: {flexDirection: 'row',alignItems: 'center',gap: 8,backgroundColor: '#F1F5F9',borderRadius: 12,padding: 12,marginBottom: 12,},
   lockedText: { flex: 1, fontSize: 12, color: '#475569', lineHeight: 16 },
   container: { flex: 1, backgroundColor: '#0B0F19' },
   content: { padding: 16, paddingBottom: 48 },

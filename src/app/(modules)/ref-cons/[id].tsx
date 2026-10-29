@@ -87,7 +87,7 @@ export default function RefConsDetailScreen() {
     }
     setSaving(true);
     try {
-      // PLACEHOLDER endpoint and payload: adjust to your backend.
+      // PLACEHOLDER endpoint and payload
       const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/refCons/items${isNew ? '' : `/${id}`}`, {
         method: isNew ? 'POST' : 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
