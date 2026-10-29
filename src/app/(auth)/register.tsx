@@ -1,6 +1,6 @@
+import { useAuth } from '@/context/AuthContext';
 import { translations } from '@/context/localization';
 import { Href, useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
 import {
   Alert,
@@ -17,8 +17,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../../components/Header';
 import { useLanguage } from '../../context/LanguageContext';
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
 export default function RegisterScreen() {
   const router = useRouter();
+  const { login } = useAuth();
   const { lang, toggleLanguage } = useLanguage();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -27,17 +30,28 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<'supervisor' |'counselor' | 'field supervisor' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [identifier, setIdentifier] = useState('');
+  // True once the ID was found in the FSK registry (name/email/role are then locked)
+  const [verified, setVerified] = useState(false);
 
   const handleRegister = async () => {
-    if (!fullName || !email || !password || !confirmPassword) {
+    if (!verified || !matrixNo || !password || !confirmPassword) {
       Alert.alert(
         translations[lang].error,
         translations[lang].requiredFields
       );
       return;
     }
-    
+
+    if (password.length < 8) {
+      Alert.alert(
+        translations[lang].error,
+        lang === 'BM'
+          ? 'Kata laluan mesti sekurang-kurangnya 8 aksara.'
+          : 'Password must be at least 8 characters.'
+      );
+      return;
+    }
+
     if (password !== confirmPassword) {
       Alert.alert(
         translations[lang].error,
@@ -49,27 +63,23 @@ export default function RegisterScreen() {
     setIsLoading(true);
 
     try {
-      // Save credentials and auto-login
-      const userData = {
-        fullName,
-        email,
-        matrixNo,
-        role,
-      };
+      // Name, email and role are taken from the FSK registry on the server.
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: matrixNo.trim(), password }),
+      });
+      const data = await response.json();
 
-      await SecureStore.setItemAsync('userToken', 'dummy-register-token-123');
-      await SecureStore.setItemAsync('userData', JSON.stringify(userData));
-
-      Alert.alert(
-        lang === 'BM' ? 'Berjaya' : 'Success',
-        lang === 'BM' ? 'Pendaftaran berjaya!' : 'Registration successful!',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/' as Href),
-          },
-        ]
-      );
+      if (response.ok) {
+        // Stores the real JWT + user and routes to the dashboard
+        await login(data.user, data.token);
+      } else {
+        Alert.alert(
+          translations[lang].error,
+          typeof data.detail === 'string' ? data.detail : translations[lang].registrationFailed
+        );
+      }
     } catch (error) {
       console.error('Registration error:', error);
       Alert.alert(
@@ -81,25 +91,48 @@ export default function RegisterScreen() {
     }
   };
 
+  const clearLookup = () => {
+    setVerified(false);
+    setFullName('');
+    setEmail('');
+    setRole(null);
+  };
+
   const handleIdLookup = async () => {
+    const id = matrixNo.trim();
+    if (!id) {
+      clearLookup();
+      return;
+    }
+
     try {
-      // API call to backend which checks FSK UPSI DB
-      const response = await fetch(`https://your-backend-api.com/api/lookup?id=${identifier}`);
+      // Backend checks the FSK UPSI registry
+      const response = await fetch(`${API_URL}/api/auth/lookup?id=${encodeURIComponent(id)}`);
       const data = await response.json();
 
       if (response.ok) {
-        // Automatically set the retrieved data into state
         setFullName(data.fullName);
         setRole(data.role);
-        setEmail(data.email) 
+        setEmail(data.email);
+        setVerified(true);
       } else {
+        clearLookup();
         Alert.alert(
-          translations[lang].error, 
-          lang === 'BM' ? 'ID tidak dijumpai dalam pangkalan data FSK.' : 'ID not found in FSK database.'
+          translations[lang].error,
+          response.status === 404
+            ? lang === 'BM' ? 'ID tidak dijumpai dalam pangkalan data FSK.' : 'ID not found in FSK database.'
+            : response.status === 409
+              ? lang === 'BM' ? 'ID ini telah didaftarkan.' : 'This ID is already registered.'
+              : translations[lang].registrationFailed
         );
       }
     } catch (error) {
-      console.error(error);
+      console.error('ID lookup error:', error);
+      clearLookup();
+      Alert.alert(
+        translations[lang].error,
+        lang === 'BM' ? 'Tidak dapat menyambung ke pelayan.' : 'Unable to connect to the server.'
+      );
     }
   };
 
@@ -114,17 +147,23 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Registration Form Card */}
           <View style={styles.card}>
-            {/* Input for Staff / Matric ID */}
-      <View style={styles.inputGroup}>
-      <TextInput
-        style={styles.input}
-        placeholder={lang === 'BM' ? 'Masukkan No. Matrik / Staff ID' : 'Enter Matric / Staff ID'}
-        placeholderTextColor="#64748B"
-        value={matrixNo}
-        onChangeText={setMatrixNo}
-        onEndEditing={handleIdLookup} 
-      />
-      </View>
+            {/* Matric / Staff ID - looked up in the FSK registry */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{translations[lang].matID}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={lang === 'BM' ? 'Masukkan No. Matrik / Staff ID' : 'Enter Matric / Staff ID'}
+                placeholderTextColor="#64748B"
+                autoCapitalize="characters"
+                autoCorrect={false}
+                value={matrixNo}
+                onChangeText={(t) => {
+                  setMatrixNo(t);
+                  if (verified) clearLookup();
+                }}
+                onBlur={handleIdLookup}
+              />
+            </View>
             {/* Full Name */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{translations[lang].fullName}</Text>
@@ -133,6 +172,7 @@ export default function RegisterScreen() {
                 placeholder={translations[lang].enterFullName}
                 placeholderTextColor="#64748B"
                 value={fullName}
+                editable={false}
               />
             </View>
 
@@ -146,18 +186,7 @@ export default function RegisterScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
-              />
-            </View>
-
-            {/* Matrix / Staff ID */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{translations[lang].matID}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="E.g. D2026101234"
-                placeholderTextColor="#64748B"
-                autoCapitalize="characters"
-                value={matrixNo}
+                editable={false}
               />
             </View>
 
@@ -190,7 +219,7 @@ export default function RegisterScreen() {
             </View>
 
             {/* Password */}
-            <View style={styles.input}>
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>{translations[lang].password}</Text>
               <TextInput
                 style={styles.input}

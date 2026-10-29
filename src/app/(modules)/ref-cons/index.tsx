@@ -110,6 +110,6 @@ const styles = StyleSheet.create({
   segmentButtonActive: { backgroundColor: '#FFFFFF' },
   segmentText: { fontSize: 12, fontWeight: '600', color: '#64748B' },
   segmentTextActive: { color: '#DC2626' },
-  empty: { textAlign: 'center', color: '#64748B', marginTop: 32 },
+  empty: { textAlign: 'center', color: '#94A3B8', marginTop: 32 },
   fab: {position: 'absolute',right: 20,bottom: 28,width: 56,height: 56,borderRadius: 28,backgroundColor: '#DC2626',justifyContent: 'center',alignItems: 'center',elevation: 4,shadowColor: '#000',shadowOffset: { width: 0, height: 2 },shadowOpacity: 0.2,shadowRadius: 4,},
 });

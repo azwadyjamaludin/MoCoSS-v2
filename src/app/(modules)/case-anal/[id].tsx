@@ -364,7 +364,7 @@ export default function CaseAnalysisDetailScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  notFoundText: { fontSize: 14, color: '#64748B', textAlign: 'center' },
+  notFoundText: { fontSize: 14, color: '#94A3B8', textAlign: 'center' },
   lockedNote: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   lockedText: { flex: 1, fontSize: 12, color: '#475569', lineHeight: 16 },
   container: { flex: 1, backgroundColor: '#0B0F19' },
   content: { padding: 16, paddingBottom: 48 },
-  label: { fontSize: 12, fontWeight: '700', color: '#475569', marginBottom: 6, marginTop: 4 },
+  label: { fontSize: 12, fontWeight: '700', color: '#CBD5E1', marginBottom: 6, marginTop: 4 },
   input: {backgroundColor: '#FFFFFF',borderWidth: 1,borderColor: '#E2E8F0',borderRadius: 12,paddingHorizontal: 14,paddingVertical: 10,fontSize: 14,color: '#0F172A',},
   multiline: { minHeight: 110 },
   privacyNote: {flexDirection: 'row',alignItems: 'center',gap: 8,backgroundColor: '#F3E8FF',borderRadius: 12,padding: 12,marginTop: 10,marginBottom: 14,},
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   primaryButton: {backgroundColor: '#7C3AED',borderRadius: 14,paddingVertical: 14,alignItems: 'center',marginTop: 8,},
   buttonDisabled: { opacity: 0.4 },
   primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  submitHint: { fontSize: 11, color: '#64748B', textAlign: 'center', marginTop: 8 },
+  submitHint: { fontSize: 11, color: '#94A3B8', textAlign: 'center', marginTop: 8 },
   secondaryButton: {borderRadius: 14,paddingVertical: 14,alignItems: 'center',marginTop: 10,borderWidth: 1,borderColor: '#7C3AED',},
   secondaryButtonText: { color: '#7C3AED', fontSize: 15, fontWeight: '700' },
 });
