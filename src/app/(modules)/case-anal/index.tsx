@@ -2,11 +2,13 @@ import Header from '@/components/Header';
 import CaseCard, { CaseStatus } from '@/components/modules/CaseCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/context/localization';
-import { MOCK_CASES } from '@/data/mock/caseAnal';
+import { DEV_APP } from '@/data/dev-app';
+import { MOCK_CASES, type CaseDetail } from '@/data/mock/caseAnal';
+import { fetchCaseAnalyses } from '@/services/case-anal';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Filter = 'all' | CaseStatus;
@@ -23,7 +25,24 @@ export default function CaseAnalysisScreen() {
   const { lang } = useLanguage();
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>('all');
-  const cases = MOCK_CASES;
+  const [cases, setCases] = useState<CaseDetail[]>(DEV_APP ? MOCK_CASES : []);
+  const [loading, setLoading] = useState(!DEV_APP);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    if (DEV_APP) return; // mock data already loaded
+    let cancelled = false;
+    fetchCaseAnalyses()
+      .then((data) => !cancelled && setCases(data))
+      .catch((e) => {
+        console.error('Case analysis load error:', e);
+        if (!cancelled) setLoadError(true);
+      })
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const counts = useMemo(
     () => ({
@@ -92,7 +111,19 @@ export default function CaseAnalysisScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={header}
         ListEmptyComponent={
-          <Text style={styles.empty}>{lang === 'BM' ? 'Tiada kes.' : 'No cases yet.'}</Text>
+          loading ? (
+            <ActivityIndicator style={styles.empty} color="#7C3AED" />
+          ) : (
+            <Text style={styles.empty}>
+              {loadError
+                ? lang === 'BM'
+                  ? 'Tidak dapat memuatkan kes.'
+                  : 'Could not load cases.'
+                : lang === 'BM'
+                  ? 'Tiada kes.'
+                  : 'No cases yet.'}
+            </Text>
+          )
         }
         renderItem={({ item }) => (
           <CaseCard

@@ -2,11 +2,13 @@ import Header from '@/components/Header';
 import RefConsCard, { RefConsKind } from '@/components/modules/RefConsCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/context/localization';
-import { MOCK_REFCONS } from '@/data/mock/refCons';
+import { DEV_APP } from '@/data/dev-app';
+import { MOCK_REFCONS, type RefConsDetail } from '@/data/mock/refCons';
+import { fetchRefCons } from '@/services/ref-cons';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Filter = 'all' | RefConsKind;
@@ -16,7 +18,24 @@ export default function RefConsListScreen() {
   const router = useRouter();
   const bm = lang === 'BM';
   const [filter, setFilter] = useState<Filter>('all');
-  const items = MOCK_REFCONS;
+  const [items, setItems] = useState<RefConsDetail[]>(DEV_APP ? MOCK_REFCONS : []);
+  const [loading, setLoading] = useState(!DEV_APP);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    if (DEV_APP) return; // mock data already loaded
+    let cancelled = false;
+    fetchRefCons()
+      .then((data) => !cancelled && setItems(data))
+      .catch((e) => {
+        console.error('Referral load error:', e);
+        if (!cancelled) setLoadError(true);
+      })
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const counts = useMemo(
     () => ({
@@ -86,7 +105,21 @@ export default function RefConsListScreen() {
         keyExtractor={(i) => i.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={header}
-        ListEmptyComponent={<Text style={styles.empty}>{bm ? 'Tiada rekod.' : 'Nothing here yet.'}</Text>}
+        ListEmptyComponent={
+          loading ? (
+            <ActivityIndicator style={styles.empty} color="#7C3AED" />
+          ) : (
+            <Text style={styles.empty}>
+              {loadError
+                ? bm
+                  ? 'Tidak dapat memuatkan rekod.'
+                  : 'Could not load records.'
+                : bm
+                  ? 'Tiada rekod.'
+                  : 'Nothing here yet.'}
+            </Text>
+          )
+        }
         renderItem={({ item }) => (
           <RefConsCard item={item} lang={lang as 'BM' | 'EN'} onPress={() => openItem(item.id)} />
         )}

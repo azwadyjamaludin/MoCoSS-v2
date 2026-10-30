@@ -5,19 +5,8 @@ import { tryTestLogin } from '@/data/mock/mock-auth';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 
-// Adjust this URL to point to MoCoSS backend (e.g., http://localhost:8000 or your server IP)
 const AUTH_API_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/auth/login`;
 
 export default function LoginScreen() {

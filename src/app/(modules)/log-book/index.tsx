@@ -1,13 +1,15 @@
+import Header from '@/components/Header';
 import LogEntryCard, { LogStatus } from '@/components/modules/LogEntryCard';
-import { MOCK_LOG_ENTRIES } from '@/data/mock/logBook';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations } from '@/context/localization';
+import { DEV_APP } from '@/data/dev-app';
+import { MOCK_LOG_ENTRIES, type LogEntryDetail } from '@/data/mock/logBook';
+import { fetchLogEntries } from '@/services/log-book';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../../components/Header';
-import { useLanguage } from '../../../context/LanguageContext';
-import { translations } from '../../../context/localization';
 
 // TODO: replace with the real requirement from the programme / board.
 const TARGET_HOURS = 100;
@@ -26,7 +28,24 @@ export default function LogBookScreen() {
   const { lang } = useLanguage();
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>('all');
-  const entries = MOCK_LOG_ENTRIES;
+  const [entries, setEntries] = useState<LogEntryDetail[]>(DEV_APP ? MOCK_LOG_ENTRIES : []);
+  const [loading, setLoading] = useState(!DEV_APP);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    if (DEV_APP) return; // mock data already loaded
+    let cancelled = false;
+    fetchLogEntries()
+      .then((data) => !cancelled && setEntries(data))
+      .catch((e) => {
+        console.error('Log book load error:', e);
+        if (!cancelled) setLoadError(true);
+      })
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const approvedHours = useMemo(
     () => entries.filter((e) => e.status === 'approved').reduce((sum, e) => sum + e.hours, 0),
@@ -93,7 +112,19 @@ export default function LogBookScreen() {
           </View>
         }
         ListEmptyComponent={
-          <Text style={styles.empty}>{lang === 'BM' ? 'Tiada catatan.' : 'No entries yet.'}</Text>
+          loading ? (
+            <ActivityIndicator style={styles.empty} color="#7C3AED" />
+          ) : (
+            <Text style={styles.empty}>
+              {loadError
+                ? lang === 'BM'
+                  ? 'Tidak dapat memuatkan catatan.'
+                  : 'Could not load entries.'
+                : lang === 'BM'
+                  ? 'Tiada catatan.'
+                  : 'No entries yet.'}
+            </Text>
+          )
         }
         renderItem={({ item }) => (
           <LogEntryCard
