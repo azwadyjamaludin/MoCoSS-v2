@@ -8,7 +8,7 @@ export interface RefConsApiRecord {
   referred_to: string;
   reason_for_referral: string;
   case_summary: string | null;
-  status: string | null; // Pending, In Progress, Completed
+  status: string | null; 
   recommendations: string | null;
   created_at: string | null;
   updated_at: string | null;

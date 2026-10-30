@@ -22,13 +22,6 @@ const CATEGORY_MAP: Record<string, LogCategory> = {
   supervision: 'supervision',
 };
 
-/**
- * The backend has no status, case code or supervisor comment yet, so:
- * - every entry is treated as 'submitted'
- * - activity_title -> activity, reflection_notes -> learning
- * - categories the app does not know (e.g. Consultation) become 'other'
- * Remove this mapping once the backend stores those fields.
- */
 export function toLogEntryDetail(r: LogBookApiRecord): LogEntryDetail {
   return {
     id: String(r.id),
