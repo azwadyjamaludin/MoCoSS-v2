@@ -6,9 +6,9 @@ export interface LogBookApiRecord {
   id: number;
   user_id: number;
   activity_title: string;
-  session_date: string; // 'YYYY-MM-DD'
+  session_date: string; 
   duration_minutes: number | null;
-  category: string | null; // Individual, Group, Consultation, ...
+  category: string | null; 
   reflection_notes: string | null;
   created_at: string | null;
   updated_at: string | null;

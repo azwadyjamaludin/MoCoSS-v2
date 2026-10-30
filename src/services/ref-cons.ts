@@ -26,14 +26,6 @@ function toStatus(r: RefConsApiRecord): RefConsStatus {
   }
 }
 
-/**
- * The backend only stores referrals, so every record has kind 'referral'.
- * - referred_to -> target
- * - reason_for_referral -> topic and reason
- * - case_summary -> workSoFar
- * - recommendations -> response
- * Remove this mapping once the backend also stores consultations.
- */
 export function toRefConsDetail(r: RefConsApiRecord): RefConsDetail {
   return {
     id: String(r.id),
