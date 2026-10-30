@@ -1,14 +1,14 @@
+import Header from '@/components/Header';
+import { CaseStatus } from '@/components/modules/CaseCard';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations } from '@/context/localization';
 import { emptySections, findCase, MOCK_SESSIONS, SectionKey, SectionValue } from '@/data/mock/caseAnal';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../../components/Header';
-import { CaseStatus } from '../../../components/modules/CaseCard';
-import { useLanguage } from '../../../context/LanguageContext';
-import { translations } from '../../../context/localization';
 
 const SECTIONS: { key: SectionKey; bm: string; en: string; hintBm: string; hintEn: string }[] = [
   {
