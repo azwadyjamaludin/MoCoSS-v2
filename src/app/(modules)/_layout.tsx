@@ -22,6 +22,8 @@ export default function ModuleLayout() {
         <Stack.Screen name="psy-edu/[id]" />
         <Stack.Screen name="prof-dev/index" />
         <Stack.Screen name="prof-dev/[id]" />
+        <Stack.Screen name="psy-test/index" />
+        <Stack.Screen name="psy-test/[id]" />
         <Stack.Screen name="full-mark/index" />
         <Stack.Screen name="full-mark/[id]" />
         <Stack.Screen name="adm-mgt/index" />

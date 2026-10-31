@@ -5,7 +5,19 @@ import type { CrudService } from '@/services/crud';
 import { Ionicons } from '@expo/vector-icons';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export type FieldType = 'text' | 'multiline' | 'date' | 'number' | 'choice';
@@ -16,6 +28,7 @@ export interface FieldDef {
   en: string;
   type: FieldType;
   required?: boolean;
+  nullable?: boolean; // 'number' only: a blank value is sent as null instead of 0
   options?: string[]; // for 'choice'
 }
 
@@ -136,7 +149,9 @@ export function SimpleFormScreen<T extends { id: number }>({ config }: { config:
         Alert.alert(bm ? 'Tarikh tidak sah' : 'Invalid date', `${label}: YYYY-MM-DD`);
         return null;
       }
-      if (f.type === 'number') {
+      if (f.type === 'number' && f.nullable && raw === '') {
+        payload[f.key] = null;
+      } else if (f.type === 'number') {
         const n = raw === '' ? 0 : Number(raw);
         if (Number.isNaN(n) || n < 0) {
           Alert.alert(bm ? 'Nombor tidak sah' : 'Invalid number', label);

@@ -1,4 +1,3 @@
-// src/context/AuthContext.tsx
 import { Href, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { createContext, useContext, useEffect, useState } from 'react';

@@ -2,8 +2,9 @@ import type { SimpleModuleConfig } from '@/components/modules/SimpleModule';
 import { translations } from '@/context/localization';
 import type { ProfDev } from '@/data/mock/profDev';
 import type { PsychoEducation } from '@/data/mock/psyEdu';
+import type { PsychologyTest } from '@/data/mock/psyTest';
 import type { SelfReflection } from '@/data/mock/reflect';
-import { profDevService, psyEduService, reflectService } from '@/services/simple-modules';
+import { profDevService, psyEduService, psyTestService, reflectService } from '@/services/simple-modules';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -71,4 +72,25 @@ export const profDevConfig: SimpleModuleConfig<ProfDev> = {
   cardBody: (r) => r.learning_outcome ?? r.provider,
   emptyBm: 'Tiada aktiviti pembangunan profesional lagi.',
   emptyEn: 'No professional development activities yet.',
+};
+
+export const psyTestConfig: SimpleModuleConfig<PsychologyTest> = {
+  routeBase: '/psy-test',
+  headerTitle: (lang) => translations[lang].psyTestTitle,
+  accent: '#4F46E5',
+  service: psyTestService,
+  fields: [
+    { key: 'test_name', bm: 'Nama ujian / inventori', en: 'Test / inventory name', type: 'text', required: true },
+    { key: 'case_ref', bm: 'Kod kes (tanpa nama klien)', en: 'Case code (no client name)', type: 'text' },
+    { key: 'test_date', bm: 'Tarikh', en: 'Date', type: 'date', required: true },
+    { key: 'raw_score', bm: 'Skor mentah', en: 'Raw score', type: 'number', nullable: true },
+    { key: 'interpretation', bm: 'Tafsiran', en: 'Interpretation', type: 'text' },
+    { key: 'notes', bm: 'Catatan', en: 'Notes', type: 'multiline' },
+  ],
+  defaults: { test_name: '', case_ref: '', test_date: today(), raw_score: '', interpretation: '', notes: '' },
+  cardTitle: (r) => r.test_name,
+  cardMeta: (r) => `${r.test_date}${r.case_ref ? ` · ${r.case_ref}` : ''}${r.raw_score !== null ? ` · ${r.raw_score}` : ''}`,
+  cardBody: (r) => r.interpretation ?? r.notes,
+  emptyBm: 'Tiada rekod ujian lagi.',
+  emptyEn: 'No tests recorded yet.',
 };

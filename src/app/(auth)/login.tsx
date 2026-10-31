@@ -30,22 +30,22 @@ export default function LoginScreen() {
 
       const testLogin =tryTestLogin(email, password)
       if (testLogin) {
-        ok = true;
         data = testLogin;
+        await login(data.user,data.token);
       } else {
       const response = await fetch(AUTH_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-      });
-      ok = response.ok
-      data = await response.json();
+        });
+        ok = response.ok
+        data = await response.json();
       
-      if (ok) {
+        if (ok) {
         await login(data.user,data.token);
-      } else {
+        } else {
         Alert.alert('Authentication Failed', data.error || 'Invalid credentials.');
-      }
+        }
       }
     } catch (error) {
       console.error('Login network error:', error);
