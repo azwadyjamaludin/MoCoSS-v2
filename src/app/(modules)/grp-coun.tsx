@@ -1,18 +1,22 @@
+import AiFeedbackCard from '@/components/modules/AiFeedbackCard';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations } from '@/context/localization';
+import { usePollSession } from '@/hooks/use-session-poll';
+import { ApiError } from '@/services/api';
+import { submitSession } from '@/services/counseling';
 import { Ionicons } from '@expo/vector-icons';
 import { AudioModule, RecordingPresets, useAudioRecorder } from 'expo-audio';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Button, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Button, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../../components/Header';
-import { useLanguage } from '../../context/LanguageContext';
-import { translations } from '../../context/localization';
 
 export default function GroupCounselingScreen() {
   const router = useRouter();
-  const { user, checkAuthToken } = useAuth();
+  const { user } = useAuth();
   const { lang } = useLanguage();
 
   const cameraRef = useRef<CameraView | null>(null);
@@ -24,7 +28,7 @@ export default function GroupCounselingScreen() {
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [recordedVideoUri, setRecordedVideoUri] = useState<string | null>(null);
   
-  // Audio recording states using modern expo-audio hook
+  // Audio recording states 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [isAudioRecording, setIsAudioRecording] = useState(false);
   const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
@@ -32,13 +36,16 @@ export default function GroupCounselingScreen() {
   // Form states
   const [clientStatus, setClientStatus] = useState('');
   const [sessionNotes, setSessionNotes] = useState('');
+  const [caseCode, setCaseCode] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState<number | null>(null);
+  const polled = usePollSession('grpCoun', savedId);
 
-  // Request permissions on load if missing
   useEffect(() => {
     if (!cameraPermission?.granted) requestCameraPermission();
     if (!microphonePermission?.granted) requestMicrophonePermissions();
 
-    // Request audio permissions natively via expo-audio
     (async () => {
       try {
         await AudioModule.requestRecordingPermissionsAsync();
@@ -48,7 +55,6 @@ export default function GroupCounselingScreen() {
     })();
   }, [cameraPermission, microphonePermission]);
   
-  // Handle live timer loop
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (isSessionActive || isAudioRecording) {
@@ -61,7 +67,6 @@ export default function GroupCounselingScreen() {
     };
   }, [isSessionActive, isAudioRecording]);
 
-  // Format seconds into HH:MM:SS
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -137,6 +142,7 @@ export default function GroupCounselingScreen() {
   };
 
   const handleSaveRecord = async () => {
+    const bm = lang === 'BM';
     if (isSessionActive || isAudioRecording) {
       Alert.alert(translations[lang].activeSession, translations[lang].saveRecordDesc);
       return;
@@ -147,57 +153,45 @@ export default function GroupCounselingScreen() {
       return;
     }
 
-    const calculatedHours = (secondsElapsed / 3600).toFixed(2);
+    if (!caseCode.trim()) {
+      Alert.alert(
+        bm ? 'Kod kes diperlukan' : 'Case code required',
+        bm ? 'Masukkan kod kes, bukan nama klien.' : 'Enter a case code, not the client name.',
+      );
+      return;
+    }
 
+    if (!consent) {
+      Alert.alert(
+        bm ? 'Persetujuan diperlukan' : 'Consent required',
+        bm ? 'Sahkan bahawa klien bersetuju dengan rakaman.' : 'Confirm that the client agreed to the recording.',
+      );
+      return;
+    }
+
+    setSaving(true);
     try {
-      const token = checkAuthToken();
-      if (!token) {
-        Alert.alert(translations[lang].sessionExpired, translations[lang].loginAgain);
-        router.replace('/(auth)/login');
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append('durationHours', calculatedHours);
-      formData.append('clientStatus', clientStatus);
-      formData.append('sessionNotes', sessionNotes);
-
-      if (recordedVideoUri) {
-        const videoFilename = recordedVideoUri.split('/').pop() || 'grpCoun-session.mp4';
-        formData.append('video', {
-          uri: recordedVideoUri,
-          name: videoFilename,
-          type: 'video/mp4',
-        } as any);
-      }
-
-      if (recordedAudioUri) {
-        const audioFilename = recordedAudioUri.split('/').pop() || 'grpCoun-session.m4a';
-        formData.append('audio', {
-          uri: recordedAudioUri,
-          name: audioFilename,
-          type: 'audio/m4a',
-        } as any);
-      }
-
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/grpCoun/sessions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
+      const session = await submitSession('grpCoun', {
+        caseCode,
+        sessionNotes,
+        clientStatus,
+        durationHours: secondsElapsed / 3600,
+        consent,
+        language: lang as 'BM' | 'EN',
+        audioUri: recordedAudioUri ?? undefined,
+        videoUri: recordedVideoUri ?? undefined,
       });
-
-      if (!response.ok) {
-        throw new Error('Server responded with an error status.');
-      }
-
-      Alert.alert(translations[lang].success, `Session saved! Total duration: ${calculatedHours} hours (${formatTime(secondsElapsed)})`, [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      setSavedId(session.id); // the feedback card below takes over from here
     } catch (error) {
       console.error('Submission error:', error);
-      Alert.alert('Error', 'Failed to upload counseling record files. Please try again.');
+      if (error instanceof ApiError && error.status === 401) {
+        Alert.alert(translations[lang].sessionExpired, translations[lang].loginAgain);
+        router.replace('/(auth)/login');
+      } else {
+        Alert.alert(translations[lang].error, error instanceof Error ? error.message : 'Failed to upload counseling record files. Please try again.');
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -249,6 +243,19 @@ export default function GroupCounselingScreen() {
       </View>
 
       <View style={styles.formGroup}>
+        <Text style={styles.label}>{lang === 'BM' ? 'Kod kes (bukan nama klien)' : 'Case code (not the client name)'}</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="C-000"
+          placeholderTextColor="#999"
+          autoCapitalize="characters"
+          value={caseCode}
+          onChangeText={setCaseCode}
+          editable={!isSessionActive && !isAudioRecording && savedId === null}
+        />
+      </View>
+
+      <View style={styles.formGroup}>
         <Text style={styles.label}>{translations[lang].clientStatus}</Text>
         <TextInput
           style={styles.input}
@@ -273,13 +280,29 @@ export default function GroupCounselingScreen() {
         />
       </View>
 
-      <TouchableOpacity 
-        style={[styles.submitButton, (isSessionActive || isAudioRecording) && styles.disabledButton]} 
-        onPress={handleSaveRecord}
-        disabled={isSessionActive || isAudioRecording}
-      >
-        <Text style={styles.submitButtonText}>{translations[lang].savedCounRecBtn}</Text>
-      </TouchableOpacity>
+      <View style={styles.consentRow}>
+        <Text style={styles.consentText}>
+          {lang === 'BM' ? 'Klien telah bersetuju dengan rakaman ini' : 'The client agreed to this recording'}
+        </Text>
+        <Switch value={consent} onValueChange={setConsent} disabled={savedId !== null} />
+      </View>
+
+      {savedId === null ? (
+        <TouchableOpacity
+          style={[styles.submitButton, (isSessionActive || isAudioRecording || saving) && styles.disabledButton]}
+          onPress={handleSaveRecord}
+          disabled={isSessionActive || isAudioRecording || saving}
+        >
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>{translations[lang].savedCounRecBtn}</Text>}
+        </TouchableOpacity>
+      ) : (
+        <>
+          <AiFeedbackCard session={polled.session} lang={lang as 'BM' | 'EN'} error={polled.error} />
+          <TouchableOpacity style={styles.submitButton} onPress={() => router.back()}>
+            <Text style={styles.submitButtonText}>{lang === 'BM' ? 'Selesai' : 'Done'}</Text>
+          </TouchableOpacity>
+        </>
+      )}
     </ScrollView>
   </SafeAreaView>
   );
@@ -307,6 +330,8 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '600', color: '#444', marginBottom: 6 },
   input: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, fontSize: 16, color: '#333' },
   textArea: { height: 100, textAlignVertical: 'top' },
+  consentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  consentText: { flex: 1, fontSize: 14, color: '#CBD5E1', marginRight: 12 },
   submitButton: { backgroundColor: '#007AFF', padding: 16, borderRadius: 8, alignItems: 'center', marginTop: 10 },
   disabledButton: { backgroundColor: '#cccccc' },
   submitButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },

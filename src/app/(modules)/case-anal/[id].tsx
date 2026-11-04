@@ -4,6 +4,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/context/localization';
 import { emptySections, findCase, MOCK_SESSIONS, SectionKey, SectionValue } from '@/data/mock/caseAnal';
+import { requestSectionDraft } from '@/services/ai-draft';
+import { ApiError } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -88,33 +90,26 @@ export default function CaseAnalysisDetailScreen() {
     setLinked((prev) => (prev.includes(sid) ? prev.filter((x) => x !== sid) : [...prev, sid]));
 
   const runAiDraft = async (key: SectionKey) => {
-    const token = checkAuthToken();
-    if (!token) {
-      Alert.alert(bm ? 'Sesi tamat' : 'Session expired', bm ? 'Sila log masuk semula.' : 'Please sign in again.');
-      return;
-    }
     setAiLoading(key);
     try {
-      // PLACEHOLDER endpoint: adjust to your backend. Send only de-identified data.
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/caseAnal/ai-draft`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          section: key,
-          caseRef,
-          sessionIds: linked,
-          currentText: sections[key].text,
-          language: lang,
-        }),
+      const result = await requestSectionDraft({
+        section: key,
+        caseRef,
+        currentText: sections[key].text,
+        language: lang as 'BM' | 'EN',
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data: { draft: string } = await response.json();
-      setSections((prev) => ({ ...prev, [key]: { text: data.draft, ai: 'pending' } }));
-    } catch {
-      Alert.alert(
-        bm ? 'Draf AI gagal' : 'AI draft failed',
-        bm ? 'Tidak dapat menjana draf. Cuba lagi.' : 'Could not generate a draft. Please try again.',
-      );
+      setSections((prev) => ({ ...prev, [key]: { text: result.draft, ai: 'pending' } }));
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        Alert.alert(bm ? 'Sesi tamat' : 'Session expired', bm ? 'Sila log masuk semula.' : 'Please sign in again.');
+      } else if (e instanceof ApiError && e.status === 429) {
+        Alert.alert(bm ? 'Had AI dicapai' : 'AI limit reached', bm ? 'Sila cuba sebentar lagi.' : 'Please try again later.');
+      } else {
+        Alert.alert(
+          bm ? 'Draf AI gagal' : 'AI draft failed',
+          bm ? 'Tidak dapat menjana draf. Cuba lagi.' : 'Could not generate a draft. Please try again.',
+        );
+      }
     } finally {
       setAiLoading(null);
     }

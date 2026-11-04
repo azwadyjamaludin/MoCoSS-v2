@@ -4,15 +4,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/context/localization';
 import { Ionicons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
-import {
-  Alert,
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../../components/Header';
 
