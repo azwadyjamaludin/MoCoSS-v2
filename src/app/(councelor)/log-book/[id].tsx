@@ -160,7 +160,7 @@ export default function LogBookDetailScreen() {
           </View>
           {!dateOk && (
             <Text style={styles.errorText}>
-              {bm ? 'Gunakan format YYYY-MM-DD, tidak boleh pada masa depan.' : 'Use YYYY-MM-DD, and not a future date.'}
+              {bm ? 'Gunakan format YYYY-MM-DD, dan bukan tarikh masa depan.' : 'Use YYYY-MM-DD, and not a future date.'}
             </Text>
           )}
 

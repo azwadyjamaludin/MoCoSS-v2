@@ -14,9 +14,11 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Button, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function IndividualCounselingScreen() {
+const API_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/grpCoun`;
+
+export default function GroupCounselingScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { checkAuthToken } = useAuth();
   const { lang } = useLanguage();
 
   const cameraRef = useRef<CameraView | null>(null);
@@ -40,7 +42,7 @@ export default function IndividualCounselingScreen() {
   const [consent, setConsent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<number | null>(null);
-  const polled = usePollSession('indCoun', savedId);
+  const polled = usePollSession('grpCoun', savedId);
 
   useEffect(() => {
     if (!cameraPermission?.granted) requestCameraPermission();
@@ -171,7 +173,7 @@ export default function IndividualCounselingScreen() {
 
     setSaving(true);
     try {
-      const session = await submitSession('indCoun', {
+      const session = await submitSession('grpCoun', {
         caseCode,
         sessionNotes,
         clientStatus,
@@ -181,7 +183,14 @@ export default function IndividualCounselingScreen() {
         audioUri: recordedAudioUri ?? undefined,
         videoUri: recordedVideoUri ?? undefined,
       });
-      setSavedId(session.id); // the feedback card below takes over from here
+      setSavedId(session.id); 
+      const response = await fetch(`${API_URL}/sessions/${session.id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${checkAuthToken()}` } });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch session after submission. Status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('Session saved successfully:', data);
+      Alert.alert(translations[lang].success, translations[lang].sessionSaved);
     } catch (error) {
       console.error('Submission error:', error);
       if (error instanceof ApiError && error.status === 401) {
@@ -205,10 +214,10 @@ export default function IndividualCounselingScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header subtitle={translations[lang].indCounSessionTitle}/>
-      <ScrollView contentContainerStyle={styles.container}>
-        
+  <SafeAreaView style={styles.container}>
+    <Header subtitle={translations[lang].grpCounSessionTitle}/>
+    <ScrollView contentContainerStyle={styles.container}>
+      
       <View style={styles.card}>
         <Text style={styles.sectionHeader}>{translations[lang].vidSesMode}</Text>
         <CameraView style={styles.cameraPreview} ref={cameraRef} facing="front">
@@ -303,8 +312,8 @@ export default function IndividualCounselingScreen() {
           </TouchableOpacity>
         </>
       )}
-      </ScrollView>
-    </SafeAreaView>
+    </ScrollView>
+  </SafeAreaView>
   );
 }
 

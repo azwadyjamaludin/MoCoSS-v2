@@ -1,3 +1,4 @@
+import Header from '@/components/Header';
 import AiFeedbackCard from '@/components/modules/AiFeedbackCard';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -12,11 +13,13 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Button, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../components/Header';
 
-export default function GroupCounselingScreen() {
+
+const API_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/indCoun`;
+
+export default function IndividualCounselingScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const {checkAuthToken} = useAuth();
   const { lang } = useLanguage();
 
   const cameraRef = useRef<CameraView | null>(null);
@@ -40,7 +43,7 @@ export default function GroupCounselingScreen() {
   const [consent, setConsent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<number | null>(null);
-  const polled = usePollSession('grpCoun', savedId);
+  const polled = usePollSession('indCoun', savedId);
 
   useEffect(() => {
     if (!cameraPermission?.granted) requestCameraPermission();
@@ -171,7 +174,7 @@ export default function GroupCounselingScreen() {
 
     setSaving(true);
     try {
-      const session = await submitSession('grpCoun', {
+      const session = await submitSession('indCoun', {
         caseCode,
         sessionNotes,
         clientStatus,
@@ -181,8 +184,15 @@ export default function GroupCounselingScreen() {
         audioUri: recordedAudioUri ?? undefined,
         videoUri: recordedVideoUri ?? undefined,
       });
-      setSavedId(session.id); // the feedback card below takes over from here
-    } catch (error) {
+      setSavedId(session.id); 
+      const response = await fetch(`${API_URL}/sessions/${session.id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${checkAuthToken()}` } });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch session after submission. Status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('Session saved successfully:', data);
+      Alert.alert(translations[lang].success, translations[lang].sessionSaved);
+     } catch (error) {
       console.error('Submission error:', error);
       if (error instanceof ApiError && error.status === 401) {
         Alert.alert(translations[lang].sessionExpired, translations[lang].loginAgain);
@@ -205,10 +215,10 @@ export default function GroupCounselingScreen() {
   }
 
   return (
-  <SafeAreaView style={styles.container}>
-    <Header subtitle={translations[lang].grpCounSessionTitle}/>
-    <ScrollView contentContainerStyle={styles.container}>
-      
+    <SafeAreaView style={styles.container}>
+      <Header subtitle={translations[lang].indCounSessionTitle}/>
+      <ScrollView contentContainerStyle={styles.container}>
+        
       <View style={styles.card}>
         <Text style={styles.sectionHeader}>{translations[lang].vidSesMode}</Text>
         <CameraView style={styles.cameraPreview} ref={cameraRef} facing="front">
@@ -303,8 +313,8 @@ export default function GroupCounselingScreen() {
           </TouchableOpacity>
         </>
       )}
-    </ScrollView>
-  </SafeAreaView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

@@ -53,7 +53,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await SecureStore.setItemAsync('userToken', token);
     await SecureStore.setItemAsync('userData', JSON.stringify(userData));
     setUser(userData);
-    router.replace('/(modules)/dashboard' as Href);
+    if (userData.role === 'superadmin') {
+      router.replace('/(superadmin)/dashboard' as Href);
+    } else if (userData.role === 'supervisor') {
+      router.replace('/(supervisor)/dashboard' as Href);
+    } else if (userData.role === 'counselor') {
+      router.replace('/(councelor)/dashboard' as Href);
+    } else if (userData.role === 'admin') {
+      router.replace('/(admin)/dashboard' as Href);
+    }
   };
 
   const logout = async () => {

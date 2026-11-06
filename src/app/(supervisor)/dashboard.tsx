@@ -42,7 +42,7 @@ export default function DashboardScreen() {
       description: { [lang]: translations[lang].indCounDesc },
       icon: 'person-outline',
       color: '#2563EB',
-      route: '/ind-coun',
+      route: '/ind-coun-rev',
     },
     {
       id: 'grp_coun',
@@ -116,13 +116,6 @@ export default function DashboardScreen() {
       icon: 'star-outline',
       color: '#CA8A04',
       route: '/full-mark',
-    },
-    {id: 'adm_mgt',
-      title: { [lang]: translations[lang].admMgtTitle },
-      description: { [lang]: translations[lang].admMgtDesc },
-      icon: 'settings-outline',
-      color: '#475569',
-      route: '/adm-mgt',
     },
   ];
 
