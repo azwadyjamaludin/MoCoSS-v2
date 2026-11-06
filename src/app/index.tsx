@@ -16,10 +16,17 @@ export default function HomeScreen() {
       const storedUserData = await SecureStore.getItemAsync('userData');
 
       if (token && storedUserData) {
-    
-        router.replace('/(modules)/dashboard' as Href);
+        const userData = JSON.parse(storedUserData);
+        if (userData.role === 'superadmin') {
+          router.replace('/(superadmin)/dashboard' as Href);
+        } else if (userData.role === 'supervisor') {
+          router.replace('/(supervisor)/dashboard' as Href);
+        } else if (userData.role === 'counselor') {
+          router.replace('/(counselor)/dashboard' as Href);
+        } else if (userData.role === 'admin') {
+          router.replace('/(admin)/dashboard' as Href);
+        }
       }else {
-      
         router.replace('/(auth)/login' as Href);
       }
     }catch (error) {

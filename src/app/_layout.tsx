@@ -26,7 +26,15 @@ function RootNavStack() {
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login' as Href);
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/(modules)/dashboard' as Href);
+      if (user?.role === 'superadmin') {
+        router.replace('/(superadmin)/dashboard' as Href);
+      } else if (user?.role === 'supervisor') {
+        router.replace('/(supervisor)/dashboard' as Href);
+      } else if (user?.role === 'counselor') {
+        router.replace('/(counselor)/dashboard' as Href);
+      } else if (user?.role === 'admin') {
+        router.replace('/(admin)/dashboard' as Href);
+      }
     }
   }, [user, segments, isLoading]);
 
