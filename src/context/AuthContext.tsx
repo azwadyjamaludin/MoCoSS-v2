@@ -18,6 +18,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+export function switchDashboard(role?: string | null): Href | null {
+  switch (role) {
+    case 'superadmin': return '/(superadmin)/dashboard' as Href;
+    case 'supervisor': return '/(supervisor)/dashboard' as Href;
+    case 'counselor': return '/(counselor)/dashboard' as Href;
+    case 'admin': return '/(admin)/dashboard' as Href;
+    default: return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,15 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await SecureStore.setItemAsync('userToken', token);
     await SecureStore.setItemAsync('userData', JSON.stringify(userData));
     setUser(userData);
-    if (userData.role === 'superadmin') {
-      router.replace('/(superadmin)/dashboard' as Href);
-    } else if (userData.role === 'supervisor') {
-      router.replace('/(supervisor)/dashboard' as Href);
-    } else if (userData.role === 'counselor') {
-      router.replace('/(councelor)/dashboard' as Href);
-    } else if (userData.role === 'admin') {
-      router.replace('/(admin)/dashboard' as Href);
-    }
+    const home = switchDashboard(userData.role);
+    if (home) router.replace(home);
   };
 
   const logout = async () => {

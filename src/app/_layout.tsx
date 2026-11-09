@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { ActivityIndicator, useColorScheme, View } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthProvider, switchDashboard, useAuth } from '@/context/AuthContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 
 SplashScreen.preventAutoHideAsync();
@@ -26,15 +26,8 @@ function RootNavStack() {
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login' as Href);
     } else if (isAuthenticated && inAuthGroup) {
-      if (user?.role === 'superadmin') {
-        router.replace('/(superadmin)/dashboard' as Href);
-      } else if (user?.role === 'supervisor') {
-        router.replace('/(supervisor)/dashboard' as Href);
-      } else if (user?.role === 'counselor') {
-        router.replace('/(counselor)/dashboard' as Href);
-      } else if (user?.role === 'admin') {
-        router.replace('/(admin)/dashboard' as Href);
-      }
+      const home = switchDashboard(user?.role);
+      if (home) router.replace(home);   
     }
   }, [user, segments, isLoading]);
 

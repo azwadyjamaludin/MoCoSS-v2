@@ -185,7 +185,7 @@ export default function IndividualCounselingScreen() {
         videoUri: recordedVideoUri ?? undefined,
       });
       setSavedId(session.id); 
-      const response = await fetch(`${API_URL}/sessions/${session.id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${checkAuthToken()}` } });
+      const response = await fetch(`${API_URL}/sessions/${session.id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${checkAuthToken()}`,body: JSON.stringify(session) } });
       if (!response.ok) {
         throw new Error(`Failed to fetch session after submission. Status: ${response.status}`);
       }

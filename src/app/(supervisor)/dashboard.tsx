@@ -20,7 +20,7 @@ interface ModuleItem {
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { lang, toggleLanguage } = useLanguage();
+  const { lang } = useLanguage();
   const {user,logout} = useAuth();
 
   const handleLogoutClick = () => {

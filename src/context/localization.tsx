@@ -75,6 +75,8 @@ export const translations = {
     detSesNotesPlaceholder: 'Enter notes observed during the consultation...',
     savedCounRecBtn: 'Save Counseling Record',
     dashboard: 'Dashboard',
+    indCounSub: 'Individual Counseling Submissions',
+    grpCounSub: 'Group Counseling Submissions',
   },
   BM: {
     logoutTitle: 'Adakah anda pasti untuk log keluar?',
@@ -152,6 +154,8 @@ export const translations = {
     detSesNotesPlaceholder: 'Masukkan catatan yang diperhatikan semasa sesi konsultasi...',
     savedCounRecBtn: 'Simpan Rekod Kaunseling',
     dashboard: 'Papan Pemuka',
+    indCounSub: 'Penghantaran Kaunseling Individu',
+    grpCounSub: 'Penghantaran Kaunseling Kelompok',
   },
 };  
 

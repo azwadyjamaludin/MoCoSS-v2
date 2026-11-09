@@ -1,29 +1,36 @@
+import Header from '@/components/Header';
+import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations } from '@/context/localization';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+const API_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/indCoun`;
 
 export default function IndCounReviewScreen() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [supervisorNotes, setSupervisorNotes] = useState<{ [key: number]: string }>({});
+  const { lang } = useLanguage();
+  const {checkAuthToken} = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    fetch('') // Update with actual endpoint
-      .then((res) => res.json())
-      .then((data) => {
+     async function getSessionsData() {
+      try {
+        const res = await fetch(`${API_URL}/sessions/`, { method: 'GET', headers: { 'Authorization': `Bearer ${checkAuthToken()}` } }); 
+        const data = await res.json();
         setSessions(data);
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error('Error fetching sessions:', err);
         setLoading(false);
-      });
-  }, []);
+      }
+    }
 
-  const handleSaveFeedback = (sessionId: number) => {
-    const feedback = supervisorNotes[sessionId];
-    // Call backend API to save supervisor feedback 
-    console.log(`Saving feedback for session ${sessionId}:`, feedback);
-  };
+    getSessionsData();
+  }, []);
 
   if (loading) {
     return (
@@ -34,8 +41,9 @@ export default function IndCounReviewScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Individual Counseling Submissions</Text>
+    <SafeAreaView style={styles.container}>
+      <Header subtitle={translations[lang].indCounSub}/>
+       <ScrollView contentContainerStyle={styles.container}>
       <FlatList
         data={sessions}
         keyExtractor={(item: any) => item.id.toString()}
@@ -47,20 +55,14 @@ export default function IndCounReviewScreen() {
               Transcript: {item.transcript || 'No transcript available.'}
             </Text>
             
-            <TextInput
-              style={styles.input}
-              placeholder="Add supervisor notes / feedback..."
-              value={supervisorNotes[item.id] || ''}
-              onChangeText={(text) => setSupervisorNotes({ ...supervisorNotes, [item.id]: text })}
-            />
-            
-            <TouchableOpacity style={styles.button} onPress={() => handleSaveFeedback(item.id)}>
+            <TouchableOpacity style={styles.button} onPress={() => router.push({ pathname: '/ind-coun-rev/[id]', params: { id: item.id } })}>
               <Text style={styles.buttonText}>Submit Feedback</Text>
             </TouchableOpacity>
           </View>
         )}
       />
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

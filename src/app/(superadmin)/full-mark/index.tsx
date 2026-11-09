@@ -19,7 +19,7 @@ export default function FullMarkScreen() {
   const bm = lang === 'BM';
 
   const role = user?.role ?? '';
-  const canEvaluate = role === 'supervisor' || role === 'field supervisor' || DEV_APP;
+  const canEvaluate = role === 'supervisor' || DEV_APP;
 
   const evals = useLoad<Evaluation[]>(fetchEvaluations, []);
   const supervisees = useLoad<Supervisee[]>(() => (canEvaluate ? fetchSupervisees() : Promise.resolve([])), []);
